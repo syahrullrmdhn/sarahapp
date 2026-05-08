@@ -3,6 +3,8 @@ export default function Icon({ name }) {
         viewBox: '0 0 24 24',
         fill: 'none',
         xmlns: 'http://www.w3.org/2000/svg',
+        width: '100%',
+        height: '100%',
     };
 
     switch (name) {
@@ -105,6 +107,43 @@ export default function Icon({ name }) {
                     <path d="M4 12v6h16v-6" />
                     <path d="M8 18v2" />
                     <path d="M16 18v2" />
+                </svg>
+            );
+        case 'refresh':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12a9 9 0 0 1-15.5 6.4" />
+                    <path d="M3 12a9 9 0 0 1 15.5-6.4" />
+                    <path d="M21 3v6h-6" />
+                    <path d="M3 21v-6h6" />
+                </svg>
+            );
+        case 'moon':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.8A8.5 8.5 0 0 1 11.2 3a7 7 0 1 0 9.8 9.8Z" />
+                </svg>
+            );
+        case 'sun':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M4.9 4.9l1.4 1.4" />
+                    <path d="M17.7 17.7l1.4 1.4" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M4.9 19.1l1.4-1.4" />
+                    <path d="M17.7 6.3l1.4-1.4" />
+                </svg>
+            );
+        case 'logout':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 17l5-5-5-5" />
+                    <path d="M15 12H3" />
+                    <path d="M21 3v18" />
                 </svg>
             );
         default:

@@ -406,205 +406,189 @@ export default function App() {
         );
     }
 
+    const navItemClass = (key) => clsx(
+        'w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+        key === menu
+            ? 'bg-white/10 text-white'
+            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5',
+    );
+    const navIconClass = (key) => clsx('h-5 w-5', key === menu ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200');
+
+    const iconBtnClass = 'inline-flex items-center justify-center rounded-full p-2 text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-800';
+
     return (
-        <div className="cartel-shell">
-            <div className={clsx('cartel-overlay', sidebarOpen && 'is-open')} onClick={() => setSidebarOpen(false)} />
+        <div className="min-h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+            <button
+                type="button"
+                className={clsx('fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden', sidebarOpen ? 'block' : 'hidden')}
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Close navigation"
+            />
 
-            <aside className={clsx('cartel-sidebar', sidebarOpen && 'is-open')}>
-                <div className="cartel-brand">
-                    <img
-                        className="cartel-brand-logo"
-                        src="/Unique%20Command%20Center%20Logo%20for%20SARAH.png"
-                        alt="SARAH"
-                    />
-                    <div className="cartel-brand-text">
-                        <div className="cartel-brand-name">SARAH Command Center</div>
-                        <div className="cartel-brand-sub">Smart Automated Response Hub</div>
-                    </div>
-                </div>
-
-                <nav className="cartel-nav">
-                    <button
-                        type="button"
-                        className={clsx('cartel-nav-item', menu === 'dashboard' && 'cartel-nav-item-active')}
-                        onClick={() => navigateMenu('dashboard')}
-                    >
-                        <span className="cartel-nav-icon" aria-hidden="true">
-                            <Icon name="dashboard" />
-                        </span>
-                        Dashboard
-                    </button>
-                    <button
-                        type="button"
-                        className={clsx('cartel-nav-item', menu === 'tickets' && 'cartel-nav-item-active')}
-                        onClick={() => navigateMenu('tickets')}
-                    >
-                        <span className="cartel-nav-icon" aria-hidden="true">
-                            <Icon name="tickets" />
-                        </span>
-                        Tickets
-                    </button>
-                    {canViewReports ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'reports' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('reports')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="reports" />
-                            </span>
-                            Reports
-                        </button>
-                    ) : null}
-
-                    <div className="cartel-nav-section">Ops</div>
-                    {canViewHelpdesk || canCreateHelpdesk ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'helpdesk' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('helpdesk')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="helpdesk" />
-                            </span>
-                            Helpdesk
-                        </button>
-                    ) : null}
-                    {canCreateEos ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'eos' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('eos')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="eos" />
-                            </span>
-                            EOS Updates
-                        </button>
-                    ) : null}
-                    {canViewNotifications ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'notifications' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('notifications')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="notifications" />
-                            </span>
-                            Notifications
-                        </button>
-                    ) : null}
-
-                    <div className="cartel-nav-section">Admin</div>
-                    {canManageUsers ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'users' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('users')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="users" />
-                            </span>
-                            Users
-                        </button>
-                    ) : null}
-                    {canViewAudit ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'audit' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('audit')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="audit" />
-                            </span>
-                            Audit
-                        </button>
-                    ) : null}
-                    <button
-                        type="button"
-                        className={clsx('cartel-nav-item', menu === 'integrations' && 'cartel-nav-item-active')}
-                        onClick={() => navigateMenu('integrations')}
-                    >
-                        <span className="cartel-nav-icon" aria-hidden="true">
-                            <Icon name="integrations" />
-                        </span>
-                        Integrations
-                    </button>
-
-                    {canManageNodes ? (
-                        <button
-                            type="button"
-                            className={clsx('cartel-nav-item', menu === 'nodes' && 'cartel-nav-item-active')}
-                            onClick={() => navigateMenu('nodes')}
-                        >
-                            <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="nodes" />
-                            </span>
-                            Nodes
-                        </button>
-                    ) : null}
-                </nav>
-
-                <div className="cartel-user">
-                    <div className="cartel-user-avatar">{(profile?.name || 'U').slice(0, 1).toUpperCase()}</div>
-                    <div>
-                        <div className="cartel-user-name">{profile?.name}</div>
-                        <div className="cartel-user-sub">{(profile?.roles || []).join(', ') || 'user'}</div>
-                    </div>
-                </div>
-            </aside>
-
-            <section className="cartel-main">
-                <header className="cartel-top">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <button
-                            className="cartel-mobile-toggle"
-                            type="button"
-                            onClick={() => setSidebarOpen(true)}
-                            aria-label="Open navigation"
-                        >
-                            <Icon name="menu" />
-                        </button>
-
-                        <div className="cartel-greeting min-w-0">
-                            <div className="cartel-greeting-kicker">
-                                Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
+            <div className="lg:grid lg:grid-cols-[280px,1fr]">
+                <aside
+                    className={clsx(
+                        'fixed inset-y-0 left-0 z-40 w-72 -translate-x-full transform transition-transform duration-200 ease-out lg:static lg:translate-x-0 lg:w-[280px]',
+                        sidebarOpen && 'translate-x-0',
+                    )}
+                >
+                    <div className="flex h-full flex-col bg-slate-900 px-4 py-5 text-slate-400">
+                        <div className="flex items-center gap-3 px-2 pb-4 border-b border-white/10">
+                            <img
+                                className="h-8 w-auto object-contain"
+                                src="/Unique%20Command%20Center%20Logo%20for%20SARAH.png"
+                                alt="SARAH"
+                            />
+                            <div className="min-w-0">
+                                <div className="text-sm font-semibold text-white truncate">SARAH Command Center</div>
+                                <div className="text-xs text-slate-400 truncate">Smart Automated Response Hub</div>
                             </div>
-                            <div className="cartel-greeting-name">
-                                {profile?.name?.split(' ')[0] || 'Operator'}!
+                        </div>
+
+                        <nav className="mt-4 space-y-1">
+                            <button type="button" className={clsx(navItemClass('dashboard'), 'group')} onClick={() => navigateMenu('dashboard')}>
+                                <span className={navIconClass('dashboard')} aria-hidden="true"><Icon name="dashboard" /></span>
+                                Dashboard
+                            </button>
+                            <button type="button" className={clsx(navItemClass('tickets'), 'group')} onClick={() => navigateMenu('tickets')}>
+                                <span className={navIconClass('tickets')} aria-hidden="true"><Icon name="tickets" /></span>
+                                Tickets
+                            </button>
+                            {canViewReports ? (
+                                <button type="button" className={clsx(navItemClass('reports'), 'group')} onClick={() => navigateMenu('reports')}>
+                                    <span className={navIconClass('reports')} aria-hidden="true"><Icon name="reports" /></span>
+                                    Reports
+                                </button>
+                            ) : null}
+
+                            <div className="pt-4">
+                                <div className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Ops</div>
+                                <div className="mt-2 space-y-1">
+                                    {canViewHelpdesk || canCreateHelpdesk ? (
+                                        <button type="button" className={clsx(navItemClass('helpdesk'), 'group')} onClick={() => navigateMenu('helpdesk')}>
+                                            <span className={navIconClass('helpdesk')} aria-hidden="true"><Icon name="helpdesk" /></span>
+                                            Helpdesk
+                                        </button>
+                                    ) : null}
+                                    {canCreateEos ? (
+                                        <button type="button" className={clsx(navItemClass('eos'), 'group')} onClick={() => navigateMenu('eos')}>
+                                            <span className={navIconClass('eos')} aria-hidden="true"><Icon name="eos" /></span>
+                                            EOS Updates
+                                        </button>
+                                    ) : null}
+                                    {canViewNotifications ? (
+                                        <button type="button" className={clsx(navItemClass('notifications'), 'group')} onClick={() => navigateMenu('notifications')}>
+                                            <span className={navIconClass('notifications')} aria-hidden="true"><Icon name="notifications" /></span>
+                                            Notifications
+                                        </button>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            <div className="pt-4">
+                                <div className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Admin</div>
+                                <div className="mt-2 space-y-1">
+                                    {canManageUsers ? (
+                                        <button type="button" className={clsx(navItemClass('users'), 'group')} onClick={() => navigateMenu('users')}>
+                                            <span className={navIconClass('users')} aria-hidden="true"><Icon name="users" /></span>
+                                            Users
+                                        </button>
+                                    ) : null}
+                                    {canViewAudit ? (
+                                        <button type="button" className={clsx(navItemClass('audit'), 'group')} onClick={() => navigateMenu('audit')}>
+                                            <span className={navIconClass('audit')} aria-hidden="true"><Icon name="audit" /></span>
+                                            Audit
+                                        </button>
+                                    ) : null}
+                                    <button type="button" className={clsx(navItemClass('integrations'), 'group')} onClick={() => navigateMenu('integrations')}>
+                                        <span className={navIconClass('integrations')} aria-hidden="true"><Icon name="integrations" /></span>
+                                        Integrations
+                                    </button>
+                                    {canManageNodes ? (
+                                        <button type="button" className={clsx(navItemClass('nodes'), 'group')} onClick={() => navigateMenu('nodes')}>
+                                            <span className={navIconClass('nodes')} aria-hidden="true"><Icon name="nodes" /></span>
+                                            Nodes
+                                        </button>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </nav>
+
+                        <div className="mt-auto pt-4 border-t border-white/10">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white font-semibold">
+                                    {(profile?.name || 'U').slice(0, 1).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-sm font-semibold text-white truncate">{profile?.name}</div>
+                                    <div className="text-xs text-slate-400 truncate">{(profile?.roles || []).join(', ') || 'user'}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div className="cartel-top-actions">
-                        <label className="cartel-search">
-                            <span className="cartel-search-icon" aria-hidden="true">
-                                <Icon name="search" />
-                            </span>
-                            <input
-                                className="cartel-search-input"
-                                placeholder="Search tickets, nodes, users"
-                                value={searchQuery}
-                                onChange={(event) => setSearchQuery(event.target.value)}
-                            />
-                        </label>
-                        <button className="cartel-btn" type="button" onClick={refreshBase}>
-                            Refresh
-                        </button>
-                        <button
-                            className="cartel-btn"
-                            type="button"
-                            onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-                        >
-                            {theme === 'light' ? 'Dark' : 'Light'}
-                        </button>
-                        <button className="cartel-btn cartel-btn-strong" type="button" onClick={logout}>
-                            Logout
-                        </button>
-                    </div>
-                </header>
+                </aside>
 
-                <main className="cartel-content">
-                    {error ? <div className="error-banner">{error}</div> : null}
+                <section className="min-w-0">
+                    <header className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+                        <div className="flex items-center justify-between gap-4 px-4 py-4 lg:px-6">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <button
+                                    className={clsx(iconBtnClass, 'lg:hidden')}
+                                    type="button"
+                                    onClick={() => setSidebarOpen(true)}
+                                    aria-label="Open navigation"
+                                >
+                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="menu" /></span>
+                                </button>
+
+                                <div className="min-w-0">
+                                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                                        Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
+                                    </div>
+                                    <div className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                        {profile?.name?.split(' ')[0] || 'Operator'}!
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <label
+                                    className="hidden md:flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600 border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:ring-2 focus-within:ring-slate-100 transition-all dark:bg-slate-900 dark:text-slate-300 dark:focus-within:bg-slate-900 dark:focus-within:border-slate-700 dark:focus-within:ring-slate-800"
+                                    style={{ width: 340 }}
+                                >
+                                    <span className="h-4 w-4 text-slate-400" aria-hidden="true"><Icon name="search" /></span>
+                                    <input
+                                        className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                                        placeholder="Search tickets, nodes, users"
+                                        value={searchQuery}
+                                        onChange={(event) => setSearchQuery(event.target.value)}
+                                    />
+                                </label>
+
+                                <button className={iconBtnClass} type="button" onClick={refreshBase} aria-label="Refresh">
+                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="refresh" /></span>
+                                </button>
+                                <button
+                                    className={iconBtnClass}
+                                    type="button"
+                                    onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+                                    aria-label="Toggle theme"
+                                >
+                                    <span className="h-5 w-5" aria-hidden="true"><Icon name={theme === 'light' ? 'moon' : 'sun'} /></span>
+                                </button>
+                                <button className={iconBtnClass} type="button" onClick={logout} aria-label="Logout">
+                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="logout" /></span>
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main className="px-4 py-6 lg:px-6">
+                        {error ? (
+                            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/30 dark:text-red-200">
+                                {error}
+                            </div>
+                        ) : null}
 
                     {menu === 'dashboard' ? (
                         <DashboardView
@@ -677,8 +661,9 @@ export default function App() {
                             setError={setError}
                         />
                     ) : null}
-                </main>
-            </section>
+                    </main>
+                </section>
+            </div>
         </div>
     );
 }
