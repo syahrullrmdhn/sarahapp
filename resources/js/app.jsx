@@ -856,66 +856,189 @@ function App() {
     );
 }
 
-function DashboardView({ board, boardCounts, stats, responseCompliance, setMenu }) {
-    const completionRate = boardCounts.total > 0 ? Math.round((boardCounts.closed / boardCounts.total) * 100) : 0;
+function StatCard({ title, value, deltaLabel, deltaTone = 'ok', icon = 'dashboard', chartTone = 'accent' }) {
+    return (
+        <section className="cartel-card cartel-stat-card">
+            <div className="cartel-stat-head">
+                <div>
+                    <div className="cartel-stat-title">{title}</div>
+                    <div className="cartel-stat-value">{value}</div>
+                    <div className={clsx('cartel-stat-delta', deltaTone === 'bad' && 'is-bad')}>{deltaLabel}</div>
+                </div>
+                <div className="cartel-stat-icon" aria-hidden="true">
+                    <Icon name={icon} />
+                </div>
+            </div>
+            <div className="cartel-stat-chart" aria-hidden="true">
+                <MiniAreaSpark tone={chartTone} />
+            </div>
+        </section>
+    );
+}
+
+function MiniAreaSpark({ tone = 'accent' }) {
+    const colors = {
+        accent: { stroke: 'var(--accent)', fill: 'color-mix(in srgb, var(--accent) 26%, transparent)' },
+        warning: { stroke: 'var(--warning)', fill: 'color-mix(in srgb, var(--warning) 22%, transparent)' },
+        success: { stroke: 'var(--success)', fill: 'color-mix(in srgb, var(--success) 22%, transparent)' },
+    };
+    const c = colors[tone] || colors.accent;
+
+    // Static sparkline for now; later we can feed it real telemetry.
+    const d = 'M0 42 C 18 28, 36 56, 54 40 C 72 26, 90 28, 108 38 C 126 48, 144 20, 162 28 C 180 36, 198 46, 216 34 C 234 22, 252 30, 270 26';
+    const area = `${d} L 270 60 L 0 60 Z`;
 
     return (
-        <div className="dashboard-grid">
-            <section className="hero-panel panel-elevated">
-                <div>
-                    <h2 className="hero-title">Incident Operations Dashboard</h2>
-                    <p className="hero-subtitle">Here is the real-time pulse across your NOC operation.</p>
-                </div>
+        <svg viewBox="0 0 270 60" preserveAspectRatio="none" className="cartel-spark">
+            <path d={area} fill={c.fill} />
+            <path d={d} fill="none" stroke={c.stroke} strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+    );
+}
 
-                <div className="hero-badges">
-                    <QuickBadge color="green" title={`${boardCounts.new} new incidents`} subtitle="Awaiting triage" />
-                    <QuickBadge color="amber" title={`${boardCounts.acknowledged} acknowledged`} subtitle="In active handling" />
-                    <QuickBadge color="red" title={`${boardCounts.escalated} escalated`} subtitle="Need lead attention" />
-                </div>
+function DashboardView({ board, boardCounts, stats, responseCompliance, setMenu }) {
+    const completionRate = boardCounts.total > 0 ? Math.round((boardCounts.closed / boardCounts.total) * 100) : 0;
+    const tickets = useMemo(() => Object.values(board.columns || {}).flat(), [board]);
+    const latestTickets = useMemo(() => {
+        const sorted = [...tickets].sort((a, b) => {
+            const ta = new Date(a.created_at || 0).getTime();
+            const tb = new Date(b.created_at || 0).getTime();
+            return tb - ta;
+        });
+        return sorted.slice(0, 8);
+    }, [tickets]);
 
-                <div className="hero-chart-card">
-                    <div className="hero-chart-head">
-                        <h3>Total incidents</h3>
-                        <button className="btn-chip" type="button" onClick={() => setMenu('tickets')}>
-                            Open Ticket Board
+    const openTickets = stats?.open_tickets ?? 0;
+    const escalatedTickets = boardCounts.escalated ?? 0;
+    const escalatedPct = openTickets > 0 ? Math.round((escalatedTickets / openTickets) * 100) : 0;
+    const closedToday = stats?.closed_today ?? 0;
+    const responseBreached = stats?.sla_response_breached ?? 0;
+
+    return (
+        <div className="cartel-dashboard">
+            <div className="cartel-stat-grid">
+                <StatCard
+                    title="Open tickets"
+                    value={openTickets}
+                    deltaLabel={openTickets > 0 ? `${escalatedPct}% escalated` : 'No active incidents'}
+                    deltaTone={escalatedPct >= 15 ? 'bad' : 'ok'}
+                    icon="tickets"
+                    chartTone="accent"
+                />
+                <StatCard
+                    title="Response breach"
+                    value={responseBreached}
+                    deltaLabel={`${responseCompliance}% compliance`}
+                    deltaTone={responseBreached > 0 ? 'bad' : 'ok'}
+                    icon="audit"
+                    chartTone="warning"
+                />
+                <StatCard
+                    title="Closed today"
+                    value={closedToday}
+                    deltaLabel={`${completionRate}% completion rate`}
+                    deltaTone="ok"
+                    icon="dashboard"
+                    chartTone="success"
+                />
+            </div>
+
+            <div className="cartel-split-grid">
+                <section className="cartel-card">
+                    <div className="cartel-card-head">
+                        <div>
+                            <div className="cartel-card-title">Total incidents</div>
+                            <div className="cartel-card-sub">Trend across the last 12 hours (sample)</div>
+                        </div>
+                        <button className="cartel-link-btn" type="button" onClick={() => setMenu('tickets')}>
+                            View all
+                            <span aria-hidden="true">↗</span>
                         </button>
                     </div>
-                    <MiniTrendChart />
-                </div>
-            </section>
+                    <div className="cartel-card-body">
+                        <MiniTrendChart />
+                    </div>
+                </section>
 
-            <section className="metric-card panel-elevated">
-                <div className="metric-head">
-                    <h3>Total open</h3>
-                    <span className="metric-pill">Last 24h</span>
-                </div>
-                <div className="metric-value">{stats?.open_tickets ?? 0}</div>
-                <BarPulse valueA={boardCounts.new} valueB={boardCounts.acknowledged} valueC={boardCounts.escalated} />
-                <div className="metric-legend">
-                    <span>New</span>
-                    <span>Acknowledged</span>
-                    <span>Escalated</span>
-                </div>
-            </section>
+                <section className="cartel-card">
+                    <div className="cartel-card-head">
+                        <div>
+                            <div className="cartel-card-title">SLA overview</div>
+                            <div className="cartel-card-sub">Response vs resolution targets</div>
+                        </div>
+                        <button className="cartel-link-btn" type="button" onClick={() => setMenu('tickets')}>
+                            Open board
+                            <span aria-hidden="true">↗</span>
+                        </button>
+                    </div>
+                    <div className="cartel-card-body cartel-sla-grid">
+                        <div className="cartel-mini-card">
+                            <div className="cartel-mini-kicker">Response</div>
+                            <div className="cartel-mini-value">{responseCompliance}%</div>
+                            <div className="cartel-mini-sub">Compliance rate</div>
+                            <SimpleSparkline />
+                        </div>
+                        <div className="cartel-mini-card">
+                            <div className="cartel-mini-kicker">Completion</div>
+                            <div className="cartel-mini-value">{completionRate}%</div>
+                            <div className="cartel-mini-sub">Closed vs total</div>
+                            <Donut value={completionRate} caption="Closed" />
+                        </div>
+                    </div>
+                </section>
+            </div>
 
-            <section className="metric-card panel-elevated">
-                <div className="metric-head">
-                    <h3>Response breach</h3>
-                    <span className="metric-pill negative">{stats?.sla_response_breached ?? 0}</span>
+            <section className="cartel-card cartel-table-card">
+                <div className="cartel-card-head">
+                    <div>
+                        <div className="cartel-card-title">Latest tickets</div>
+                        <div className="cartel-card-sub">Most recent incidents from monitoring + helpdesk</div>
+                    </div>
+                    <button className="cartel-link-btn" type="button" onClick={() => setMenu('tickets')}>
+                        View all
+                        <span aria-hidden="true">↗</span>
+                    </button>
                 </div>
-                <div className="metric-value">{responseCompliance}%</div>
-                <SimpleSparkline />
-                <p className="metric-note">Current response SLA compliance</p>
-            </section>
 
-            <section className="metric-card panel-elevated">
-                <h3>SLA Compliance</h3>
-                <Donut value={responseCompliance} caption="Response SLA" />
-            </section>
-
-            <section className="metric-card panel-elevated">
-                <h3>Completion Rate</h3>
-                <Donut value={completionRate} caption="Closed tickets" />
+                <div className="cartel-table-wrap">
+                    <table className="cartel-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Created</th>
+                                <th>Node</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assignee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {latestTickets.map((ticket) => (
+                                <tr key={ticket.id}>
+                                    <td className="cartel-table-strong">{ticket.ticket_code}</td>
+                                    <td>{ticket.created_at ? new Date(ticket.created_at).toLocaleString() : '-'}</td>
+                                    <td>{ticket.node_name || '-'}</td>
+                                    <td>
+                                        <span className="cartel-badge">{statusLabels[ticket.status] || ticket.status}</span>
+                                    </td>
+                                    <td>
+                                        <span className={clsx('cartel-badge', priorityClass[ticket.priority] || priorityClass.P3)}>
+                                            {ticket.priority}
+                                        </span>
+                                    </td>
+                                    <td>{ticket.assignee?.name || '-'}</td>
+                                </tr>
+                            ))}
+                            {latestTickets.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="cartel-empty">
+                                        No tickets yet. Ingest a webhook or submit a helpdesk report.
+                                    </td>
+                                </tr>
+                            ) : null}
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </div>
     );

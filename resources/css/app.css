@@ -381,6 +381,262 @@
         min-width: 0;
     }
 
+    .cartel-dashboard {
+        display: grid;
+        gap: 16px;
+    }
+
+    .cartel-stat-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .cartel-split-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .cartel-card {
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        border-radius: 18px;
+        box-shadow: var(--shadow-sm);
+        padding: 18px 18px;
+        min-width: 0;
+    }
+
+    .cartel-card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .cartel-card-title {
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--text-main);
+        font-size: 16px;
+    }
+
+    .cartel-card-sub {
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-sub);
+    }
+
+    .cartel-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        box-shadow: var(--shadow-xs);
+        padding: 9px 12px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-main);
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        white-space: nowrap;
+    }
+
+    .cartel-link-btn:hover {
+        background: var(--panel-soft);
+        border-color: color-mix(in srgb, var(--panel-border) 65%, var(--accent));
+        transform: translateY(-1px);
+    }
+
+    .cartel-card-body {
+        min-width: 0;
+    }
+
+    .cartel-stat-card {
+        padding: 16px 16px 12px;
+    }
+
+    .cartel-stat-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .cartel-stat-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-sub);
+        letter-spacing: -0.01em;
+    }
+
+    .cartel-stat-value {
+        margin-top: 10px;
+        font-size: 28px;
+        font-weight: 950;
+        letter-spacing: -0.04em;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .cartel-stat-delta {
+        margin-top: 10px;
+        font-size: 12px;
+        font-weight: 800;
+        color: color-mix(in srgb, var(--success) 85%, var(--text-sub));
+    }
+
+    .cartel-stat-delta.is-bad {
+        color: color-mix(in srgb, var(--danger) 85%, var(--text-sub));
+    }
+
+    .cartel-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel-soft);
+        display: grid;
+        place-items: center;
+        box-shadow: var(--shadow-xs);
+    }
+
+    .cartel-stat-icon svg {
+        width: 18px;
+        height: 18px;
+        color: var(--text-main);
+        opacity: 0.72;
+    }
+
+    .cartel-stat-chart {
+        margin-top: 12px;
+        height: 56px;
+        border-radius: 14px;
+        border: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel-soft) 70%, transparent);
+        overflow: hidden;
+    }
+
+    .cartel-spark {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .cartel-sla-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .cartel-mini-card {
+        border-radius: 16px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel-soft);
+        padding: 14px 14px;
+        min-width: 0;
+    }
+
+    .cartel-mini-kicker {
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+        color: var(--text-sub);
+    }
+
+    .cartel-mini-value {
+        margin-top: 10px;
+        font-size: 24px;
+        font-weight: 950;
+        letter-spacing: -0.03em;
+        color: var(--text-main);
+        line-height: 1;
+    }
+
+    .cartel-mini-sub {
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-sub);
+    }
+
+    .cartel-table-card {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .cartel-table-card .cartel-card-head {
+        padding: 18px 18px 0;
+        margin-bottom: 12px;
+    }
+
+    .cartel-table-wrap {
+        overflow-x: auto;
+    }
+
+    .cartel-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 13px;
+    }
+
+    .cartel-table thead th {
+        text-align: left;
+        padding: 12px 18px;
+        font-size: 12px;
+        font-weight: 900;
+        color: color-mix(in srgb, var(--text-sub) 85%, transparent);
+        border-top: 1px solid var(--panel-border);
+        border-bottom: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+    }
+
+    .cartel-table tbody td {
+        padding: 14px 18px;
+        border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 85%, transparent);
+        color: var(--text-sub);
+        font-weight: 650;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .cartel-table tbody tr:hover td {
+        background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
+    }
+
+    .cartel-table-strong {
+        color: var(--text-main);
+        font-weight: 950;
+        letter-spacing: -0.01em;
+    }
+
+    .cartel-empty {
+        padding: 22px 18px;
+        color: var(--text-sub);
+        font-weight: 700;
+        white-space: normal;
+    }
+
+    .cartel-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel) 65%, transparent);
+        font-size: 12px;
+        font-weight: 900;
+        color: var(--text-main);
+    }
+
     .cartel-overlay {
         display: none;
     }
@@ -956,6 +1212,20 @@
 
         .dashboard-grid {
             grid-template-columns: 1fr;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .cartel-stat-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .cartel-split-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .cartel-sla-grid {
+            grid-template-columns: 1fr 1fr;
         }
     }
 }
