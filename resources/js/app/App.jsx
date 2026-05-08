@@ -31,8 +31,6 @@ export default function App() {
     const [board, setBoard] = useState({ columns: {}, meta: {} });
     const [stats, setStats] = useState(null);
     const [integrations, setIntegrations] = useState({ webhook_sources: [], telegram: null });
-    const [users, setUsers] = useState([]);
-    const [roles, setRoles] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
     const [helpdeskReports, setHelpdeskReports] = useState([]);
     const [eosTicketUpdates, setEosTicketUpdates] = useState([]);
@@ -40,14 +38,6 @@ export default function App() {
     const [notificationLogs, setNotificationLogs] = useState([]);
     const [selectedEosTicket, setSelectedEosTicket] = useState(null);
 
-    const [newUser, setNewUser] = useState({
-        name: '',
-        email: '',
-        password: '',
-        timezone: 'Asia/Jakarta',
-        is_active: true,
-        roles: [],
-    });
     const [newHelpdeskReport, setNewHelpdeskReport] = useState({
         reporter_name: '',
         reporter_contact: '',
@@ -139,12 +129,6 @@ export default function App() {
 
     const refreshContextual = async (nextMenu, userProfile = profile) => {
         try {
-            if (nextMenu === 'users' && hasPermission(userProfile, 'users.manage')) {
-                const [usersRes, rolesRes] = await Promise.all([api.get('/admin/users'), api.get('/admin/roles')]);
-                setUsers(usersRes.data.data || []);
-                setRoles(rolesRes.data || []);
-            }
-
             if (nextMenu === 'audit' && hasPermission(userProfile, 'audit.view')) {
                 const auditRes = await api.get('/admin/audit-logs');
                 setAuditLogs(auditRes.data.data || []);
@@ -220,8 +204,6 @@ export default function App() {
         setBoard({ columns: {}, meta: {} });
         setStats(null);
         setIntegrations({ webhook_sources: [], telegram: null });
-        setUsers([]);
-        setRoles([]);
         setAuditLogs([]);
         setHelpdeskReports([]);
         setEosTicketUpdates([]);
@@ -283,48 +265,6 @@ export default function App() {
         }
 
         await updateStatus(ticket.id, toColumn);
-    };
-
-    const createUser = async (event) => {
-        event.preventDefault();
-
-        try {
-            await api.post('/admin/users', newUser);
-            setNewUser({
-                name: '',
-                email: '',
-                password: '',
-                timezone: 'Asia/Jakarta',
-                is_active: true,
-                roles: [],
-            });
-            await refreshContextual('users');
-            return true;
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Failed to create user');
-            return false;
-        }
-    };
-
-    const toggleUserActive = async (user) => {
-        try {
-            await api.patch(`/admin/users/${user.id}`, { is_active: !user.is_active });
-            await refreshContextual('users');
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Failed to update user status');
-        }
-    };
-
-    const setUserRole = async (user, roleSlug) => {
-        const isAssigned = user.roles.some((role) => role.slug === roleSlug);
-        const nextRoles = isAssigned ? user.roles.filter((role) => role.slug !== roleSlug).map((role) => role.slug) : [...user.roles.map((role) => role.slug), roleSlug];
-
-        try {
-            await api.patch(`/admin/users/${user.id}`, { roles: nextRoles });
-            await refreshContextual('users');
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Failed to update user role');
-        }
     };
 
     const createHelpdeskReport = async (event) => {
@@ -598,7 +538,7 @@ export default function App() {
                             onClick={() => navigateMenu('nodes')}
                         >
                             <span className="cartel-nav-icon" aria-hidden="true">
-                                <Icon name="dashboard" />
+                                <Icon name="nodes" />
                             </span>
                             Nodes
                         </button>
@@ -726,13 +666,7 @@ export default function App() {
 
                     {menu === 'users' && canManageUsers ? (
                         <UserManagementPanel
-                            users={users}
-                            roles={roles}
-                            newUser={newUser}
-                            setNewUser={setNewUser}
-                            createUser={createUser}
-                            toggleUserActive={toggleUserActive}
-                            setUserRole={setUserRole}
+                            setError={setError}
                         />
                     ) : null}
 

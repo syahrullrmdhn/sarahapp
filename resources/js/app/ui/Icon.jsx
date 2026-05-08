@@ -96,6 +96,17 @@ export default function Icon({ name }) {
                     <path d="M7 12h10v8H7v-8Z" />
                 </svg>
             );
+        case 'nodes':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6h16v6H4V6Z" />
+                    <path d="M6.5 9h.01" />
+                    <path d="M9.5 9h.01" />
+                    <path d="M4 12v6h16v-6" />
+                    <path d="M8 18v2" />
+                    <path d="M16 18v2" />
+                </svg>
+            );
         default:
             return (
                 <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,4 +115,3 @@ export default function Icon({ name }) {
             );
     }
 }
-

@@ -576,6 +576,7 @@
 
     .cartel-table-wrap {
         overflow-x: auto;
+        scrollbar-gutter: stable;
     }
 
     .cartel-table {
@@ -596,6 +597,9 @@
         background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
         letter-spacing: -0.01em;
         white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 2;
     }
 
     .cartel-table tbody td {
@@ -603,12 +607,23 @@
         border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 85%, transparent);
         color: var(--text-sub);
         font-weight: 650;
-        white-space: nowrap;
+        white-space: normal;
         vertical-align: middle;
     }
 
     .cartel-table tbody tr:hover td {
         background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
+    }
+
+    .cartel-nowrap {
+        white-space: nowrap;
+    }
+
+    .cartel-truncate {
+        max-width: 340px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .cartel-table-strong {
@@ -635,6 +650,39 @@
         font-size: 12px;
         font-weight: 900;
         color: var(--text-main);
+    }
+
+    .cartel-pagination {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .cartel-pagination-info {
+        color: var(--text-sub);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .cartel-pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .cartel-pagination-page {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-sub);
+        padding: 8px 10px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel-soft) 55%, transparent);
+        box-shadow: var(--shadow-xs);
+        white-space: nowrap;
     }
 
     /* Modal */
@@ -1142,15 +1190,20 @@
         @apply rounded-xl border p-3;
         border-color: var(--panel-border);
         background: var(--panel-soft);
-        cursor: grab;
-    }
-
-    .ticket-card:active {
-        cursor: grabbing;
+        cursor: default;
     }
 
     .ticket-top {
         @apply mb-2 flex items-center justify-between gap-2;
+    }
+
+    .ticket-drag-handle {
+        cursor: grab;
+        user-select: none;
+    }
+
+    .ticket-drag-handle:active {
+        cursor: grabbing;
     }
 
     .ticket-priority {
