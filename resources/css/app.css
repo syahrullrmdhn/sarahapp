@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.jsx';
+
+:root {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-card-soft: #eef2ff;
+    --text-main: #334155;
+    --text-subtle: #64748b;
+    --stroke: rgba(51, 65, 85, 0.2);
+    --hero: radial-gradient(circle at 15% 20%, #bfdbfe 0%, transparent 45%), radial-gradient(circle at 80% 0%, #fcd34d 0%, transparent 33%), linear-gradient(135deg, #f8fafc, #f1f5f9 40%, #f8fafc);
+}
+
+:root[data-theme='dark'] {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-soft: #172554;
+    --text-main: #e2e8f0;
+    --text-subtle: #cbd5e1;
+    --stroke: rgba(226, 232, 240, 0.2);
+    --hero: radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.18) 0%, transparent 45%), radial-gradient(circle at 80% 0%, rgba(251, 146, 60, 0.15) 0%, transparent 33%), linear-gradient(135deg, #0f172a, #0b1220 40%, #111827);
+}
+
+@layer base {
+    html,
+    body,
+    #app {
+        height: 100%;
+    }
+
+    body {
+        font-family: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+        background: var(--hero);
+        color: var(--text-main);
+        transition: background 300ms ease;
+    }
+}
+
+@layer components {
+    .login-shell {
+        @apply flex min-h-full items-center justify-center p-6;
+    }
+
+    .login-card {
+        @apply w-full max-w-md rounded-3xl border p-8 shadow-2xl backdrop-blur;
+        background: color-mix(in srgb, var(--bg-card) 92%, transparent);
+        border-color: var(--stroke);
+    }
+
+    .dashboard-shell {
+        @apply min-h-full p-4 md:p-6;
+    }
+
+    .dashboard-header {
+        @apply mb-5 flex flex-col gap-3 rounded-2xl border p-4 md:flex-row md:items-center md:justify-between;
+        background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+        border-color: var(--stroke);
+        animation: riseIn 420ms ease;
+    }
+
+    .stats-grid {
+        @apply grid gap-3 md:grid-cols-3 xl:grid-cols-5;
+    }
+
+    .menu-tabs {
+        @apply mt-3 flex flex-wrap gap-2;
+    }
+
+    .menu-tab {
+        @apply rounded-xl border px-3 py-2 text-sm font-semibold;
+        border-color: var(--stroke);
+        background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+    }
+
+    .menu-tab-active {
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        color: #f8fafc;
+        border-color: rgba(14, 165, 233, 0.7);
+    }
+
+    .stat-card {
+        @apply rounded-2xl border p-4 shadow-sm;
+        background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+        border-color: var(--stroke);
+        animation: riseIn 420ms ease;
+    }
+
+    .kanban-grid {
+        @apply mt-4 grid gap-3 lg:grid-cols-3 xl:grid-cols-6;
+    }
+
+    .kanban-column {
+        @apply min-h-[280px] rounded-2xl border p-3;
+        background: color-mix(in srgb, var(--bg-card-soft) 78%, var(--bg-card));
+        border-color: var(--stroke);
+    }
+
+    .ticket-card {
+        @apply cursor-grab rounded-xl border p-3 shadow-sm;
+        background: color-mix(in srgb, var(--bg-card) 95%, transparent);
+        border-color: var(--stroke);
+        animation: riseIn 280ms ease;
+    }
+
+    .ticket-card:active {
+        @apply cursor-grabbing;
+    }
+
+    .input {
+        @apply w-full rounded-xl border px-3 py-2 outline-none transition;
+        border-color: var(--stroke);
+        background: color-mix(in srgb, var(--bg-card) 96%, transparent);
+    }
+
+    .input:focus {
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+    }
+
+    .btn-primary {
+        @apply rounded-xl px-4 py-2 font-semibold transition;
+        color: #f8fafc;
+        background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.08);
+    }
+
+    .btn-secondary {
+        @apply rounded-xl border px-3 py-2 text-sm font-semibold transition;
+        border-color: var(--stroke);
+        background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+    }
+
+    .btn-chip {
+        @apply rounded-lg border px-2 py-1 text-xs transition;
+        border-color: var(--stroke);
+        background: color-mix(in srgb, var(--bg-card-soft) 80%, var(--bg-card));
+    }
+
+    .btn-chip:hover,
+    .btn-secondary:hover {
+        @apply -translate-y-px;
+    }
+
+    .panel {
+        @apply rounded-2xl border p-4;
+        background: color-mix(in srgb, var(--bg-card) 90%, transparent);
+        border-color: var(--stroke);
+    }
+
+    .table {
+        @apply w-full text-left text-sm;
+    }
+
+    .table thead th {
+        @apply border-b px-3 py-2 text-xs uppercase tracking-wider opacity-70;
+        border-color: var(--stroke);
+    }
+
+    .table tbody td {
+        @apply border-b px-3 py-2 align-top;
+        border-color: color-mix(in srgb, var(--stroke) 70%, transparent);
+    }
+}
+
+@keyframes riseIn {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
