@@ -64,10 +64,118 @@ function formatTimer(deadline) {
     return diffMs < 0 ? `-${text}` : text;
 }
 
+function Icon({ name }) {
+    const common = {
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        xmlns: 'http://www.w3.org/2000/svg',
+    };
+
+    switch (name) {
+        case 'menu':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M4 7h16" />
+                    <path d="M4 12h16" />
+                    <path d="M4 17h16" />
+                </svg>
+            );
+        case 'search':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                    <path d="M16.5 16.5 21 21" />
+                </svg>
+            );
+        case 'dashboard':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h7v7H4V4Z" />
+                    <path d="M13 4h7v4h-7V4Z" />
+                    <path d="M13 10h7v10h-7V10Z" />
+                    <path d="M4 13h7v7H4v-7Z" />
+                </svg>
+            );
+        case 'tickets':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 7h14v10H7" />
+                    <path d="M3 7h2v2H3V7Z" />
+                    <path d="M3 11h2v2H3v-2Z" />
+                    <path d="M3 15h2v2H3v-2Z" />
+                </svg>
+            );
+        case 'reports':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 19V5" />
+                    <path d="M8 19v-7" />
+                    <path d="M12 19v-4" />
+                    <path d="M16 19v-10" />
+                    <path d="M20 19v-6" />
+                </svg>
+            );
+        case 'helpdesk':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6h16v10H7l-3 3V6Z" />
+                    <path d="M8 10h8" />
+                    <path d="M8 13h6" />
+                </svg>
+            );
+        case 'eos':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-5.3 5.3a2 2 0 0 0 2.8 2.8l5.3-5.3a4 4 0 0 0 5.4-5.4l-2 2-3-3 2-2Z" />
+                </svg>
+            );
+        case 'notifications':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z" />
+                    <path d="M9.7 19a2.3 2.3 0 0 0 4.6 0" />
+                </svg>
+            );
+        case 'users':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                    <path d="M22 21v-2a3 3 0 0 0-2-2.8" />
+                    <path d="M16 3.2a4 4 0 0 1 0 7.6" />
+                </svg>
+            );
+        case 'audit':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6Z" />
+                    <path d="M14 2v6h6" />
+                    <path d="M8 13h8" />
+                    <path d="M8 17h5" />
+                </svg>
+            );
+        case 'integrations':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 7h8" />
+                    <path d="M12 3v8" />
+                    <path d="M7 12h10v8H7v-8Z" />
+                </svg>
+            );
+        default:
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+                </svg>
+            );
+    }
+}
+
 function App() {
     const [token, setToken] = useState(() => localStorage.getItem('sarah_token') || '');
     const [theme, setTheme] = useState(() => localStorage.getItem('sarah_theme') || 'light');
     const [menu, setMenu] = useState('dashboard');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -113,6 +221,11 @@ function App() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const sensors = useSensors(useSensor(PointerSensor));
+
+    const navigateMenu = (nextMenu) => {
+        setMenu(nextMenu);
+        setSidebarOpen(false);
+    };
 
     useEffect(() => {
         document.documentElement.dataset.theme = theme;
@@ -474,11 +587,13 @@ function App() {
                         </button>
                     </form>
 
-                    <div className="dev-cred-box">
-                        <div className="dev-cred-title">Super Admin (Dev)</div>
-                        <div>superadmin@sarah.local</div>
-                        <div>S4rahSecure!2026</div>
-                    </div>
+                    {import.meta.env?.DEV ? (
+                        <div className="dev-cred-box">
+                            <div className="dev-cred-title">Super Admin (Dev)</div>
+                            <div>superadmin@sarah.local</div>
+                            <div>S4rahSecure!2026</div>
+                        </div>
+                    ) : null}
 
                     {error ? <p className="auth-error">{error}</p> : null}
                 </div>
@@ -486,66 +601,191 @@ function App() {
         );
     }
 
-    const navItems = [
-        { key: 'dashboard', label: 'Dashboard' },
-        { key: 'tickets', label: 'Tickets' },
-        { key: 'helpdesk', label: 'Helpdesk', permission: 'helpdesk.report.view' },
-        { key: 'eos', label: 'EOS', permission: 'eos.update.create' },
-        { key: 'integrations', label: 'Integrations' },
-        { key: 'reports', label: 'Reports', permission: 'reports.view' },
-        { key: 'notifications', label: 'Notifications', permission: 'notifications.view' },
-        { key: 'users', label: 'Users', permission: 'users.manage' },
-        { key: 'audit', label: 'Audit', permission: 'audit.view' },
-    ];
-
     return (
-        <div className="parsinta-shell">
-            <header className="parsinta-nav">
-                <div className="nav-left">
+        <div className="cartel-shell">
+            <div className={clsx('cartel-overlay', sidebarOpen && 'is-open')} onClick={() => setSidebarOpen(false)} />
+
+            <aside className={clsx('cartel-sidebar', sidebarOpen && 'is-open')}>
+                <div className="cartel-brand">
                     <img
-                        src="/Unique Command Center Logo for SARAH.png"
-                        alt="SARAH Command Center"
-                        className="nav-logo"
+                        className="cartel-brand-logo"
+                        src="/Unique%20Command%20Center%20Logo%20for%20SARAH.png"
+                        alt="SARAH"
                     />
-                </div>
-
-                <nav className="nav-center">
-                    {navItems
-                        .filter((item) => !item.permission || hasPermission(profile, item.permission))
-                        .map((item) => (
-                            <button
-                                key={item.key}
-                                type="button"
-                                className={clsx('nav-link', menu === item.key && 'nav-link-active')}
-                                onClick={() => setMenu(item.key)}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                </nav>
-
-                <div className="nav-right">
-                    <label className="nav-search">
-                        <span className="nav-search-icon">⌕</span>
-                        <input
-                            className="nav-search-input"
-                            placeholder="Search ticket code, node, user..."
-                            value={searchQuery}
-                            onChange={(event) => setSearchQuery(event.target.value)}
-                        />
-                    </label>
-                    <button className="nav-btn" onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} type="button">
-                        {theme === 'light' ? 'Dark' : 'Light'}
-                    </button>
-                    <button className="nav-btn" type="button" onClick={refreshBase}>Refresh</button>
-                    <button className="nav-btn nav-btn-strong" type="button" onClick={logout}>Logout</button>
-                    <div className="nav-avatar" title={profile?.name || 'User'}>
-                        {(profile?.name || 'U').slice(0, 1).toUpperCase()}
+                    <div className="cartel-brand-text">
+                        <div className="cartel-brand-name">SARAH Command Center</div>
+                        <div className="cartel-brand-sub">Smart Automated Response Hub</div>
                     </div>
                 </div>
-            </header>
 
-            <main className="parsinta-content">
+                <nav className="cartel-nav">
+                    <button
+                        type="button"
+                        className={clsx('cartel-nav-item', menu === 'dashboard' && 'cartel-nav-item-active')}
+                        onClick={() => navigateMenu('dashboard')}
+                    >
+                        <span className="cartel-nav-icon" aria-hidden="true">
+                            <Icon name="dashboard" />
+                        </span>
+                        Dashboard
+                    </button>
+                    <button
+                        type="button"
+                        className={clsx('cartel-nav-item', menu === 'tickets' && 'cartel-nav-item-active')}
+                        onClick={() => navigateMenu('tickets')}
+                    >
+                        <span className="cartel-nav-icon" aria-hidden="true">
+                            <Icon name="tickets" />
+                        </span>
+                        Tickets
+                    </button>
+                    {canViewReports ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'reports' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('reports')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="reports" />
+                            </span>
+                            Reports
+                        </button>
+                    ) : null}
+
+                    <div className="cartel-nav-section">Ops</div>
+                    {canViewHelpdesk || canCreateHelpdesk ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'helpdesk' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('helpdesk')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="helpdesk" />
+                            </span>
+                            Helpdesk
+                        </button>
+                    ) : null}
+                    {canCreateEos ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'eos' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('eos')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="eos" />
+                            </span>
+                            EOS Updates
+                        </button>
+                    ) : null}
+                    {canViewNotifications ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'notifications' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('notifications')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="notifications" />
+                            </span>
+                            Notifications
+                        </button>
+                    ) : null}
+
+                    <div className="cartel-nav-section">Admin</div>
+                    {canManageUsers ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'users' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('users')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="users" />
+                            </span>
+                            Users
+                        </button>
+                    ) : null}
+                    {canViewAudit ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'audit' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('audit')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="audit" />
+                            </span>
+                            Audit
+                        </button>
+                    ) : null}
+                    <button
+                        type="button"
+                        className={clsx('cartel-nav-item', menu === 'integrations' && 'cartel-nav-item-active')}
+                        onClick={() => navigateMenu('integrations')}
+                    >
+                        <span className="cartel-nav-icon" aria-hidden="true">
+                            <Icon name="integrations" />
+                        </span>
+                        Integrations
+                    </button>
+                </nav>
+
+                <div className="cartel-user">
+                    <div className="cartel-user-avatar">{(profile?.name || 'U').slice(0, 1).toUpperCase()}</div>
+                    <div>
+                        <div className="cartel-user-name">{profile?.name}</div>
+                        <div className="cartel-user-sub">{(profile?.roles || []).join(', ') || 'user'}</div>
+                    </div>
+                </div>
+            </aside>
+
+            <section className="cartel-main">
+                <header className="cartel-top">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <button
+                            className="cartel-mobile-toggle"
+                            type="button"
+                            onClick={() => setSidebarOpen(true)}
+                            aria-label="Open navigation"
+                        >
+                            <Icon name="menu" />
+                        </button>
+
+                        <div className="cartel-greeting min-w-0">
+                            <div className="cartel-greeting-kicker">
+                                Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
+                            </div>
+                            <div className="cartel-greeting-name">
+                                {profile?.name?.split(' ')[0] || 'Operator'}!
+                            </div>
+                        </div>
+                    </div>
+                    <div className="cartel-top-actions">
+                        <label className="cartel-search">
+                            <span className="cartel-search-icon" aria-hidden="true">
+                                <Icon name="search" />
+                            </span>
+                            <input
+                                className="cartel-search-input"
+                                placeholder="Search tickets, nodes, users"
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                            />
+                        </label>
+                        <button className="cartel-btn" type="button" onClick={refreshBase}>
+                            Refresh
+                        </button>
+                        <button
+                            className="cartel-btn"
+                            type="button"
+                            onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+                        >
+                            {theme === 'light' ? 'Dark' : 'Light'}
+                        </button>
+                        <button className="cartel-btn cartel-btn-strong" type="button" onClick={logout}>
+                            Logout
+                        </button>
+                    </div>
+                </header>
+
+                <main className="cartel-content">
                 {error ? <div className="error-banner">{error}</div> : null}
 
                 {menu === 'dashboard' ? (
@@ -554,7 +794,7 @@ function App() {
                         boardCounts={boardCounts}
                         stats={stats}
                         responseCompliance={responseCompliance}
-                        setMenu={setMenu}
+                        setMenu={navigateMenu}
                     />
                 ) : null}
 
@@ -610,7 +850,8 @@ function App() {
                 ) : null}
 
                 {menu === 'audit' && canViewAudit ? <AuditPanel logs={auditLogs} /> : null}
-            </main>
+                </main>
+            </section>
         </div>
     );
 }
