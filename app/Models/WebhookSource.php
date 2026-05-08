@@ -13,6 +13,10 @@ class WebhookSource extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            // Store secrets encrypted at rest; decrypted transparently when used for HMAC verification.
+            'shared_secret' => 'encrypted',
+            'is_active' => 'boolean',
+        ];
     }
 }

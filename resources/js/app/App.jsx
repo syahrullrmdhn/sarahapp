@@ -1,10 +1,10 @@
-import axios from 'axios';
 import clsx from 'clsx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 import { columnsOrder } from './constants';
 import { hasPermission } from './utils';
+import { api, clearAuthToken, setAuthToken } from './api';
 
 import Icon from './ui/Icon';
 import DashboardView from './views/DashboardView';
@@ -16,13 +16,7 @@ import OperationsReportPanel from './views/OperationsReportPanel';
 import NotificationPanel from './views/NotificationPanel';
 import UserManagementPanel from './views/UserManagementPanel';
 import AuditPanel from './views/AuditPanel';
-
-const api = axios.create({
-    baseURL: '/api',
-    headers: {
-        Accept: 'application/json',
-    },
-});
+import NodesPanel from './views/NodesPanel';
 
 export default function App() {
     const [token, setToken] = useState(() => localStorage.getItem('sarah_token') || '');
@@ -90,7 +84,7 @@ export default function App() {
             return;
         }
 
-        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        setAuthToken(token);
         localStorage.setItem('sarah_token', token);
 
         const boot = async () => {
@@ -219,7 +213,7 @@ export default function App() {
         }
 
         localStorage.removeItem('sarah_token');
-        delete api.defaults.headers.common.Authorization;
+        clearAuthToken();
         setToken('');
         setMenu('dashboard');
         setProfile(null);
@@ -237,6 +231,7 @@ export default function App() {
     };
 
     const canUpdateTicket = useMemo(() => hasPermission(profile, 'tickets.update'), [profile]);
+    const canCreateTicket = useMemo(() => hasPermission(profile, 'tickets.create'), [profile]);
     const canManageUsers = useMemo(() => hasPermission(profile, 'users.manage'), [profile]);
     const canViewAudit = useMemo(() => hasPermission(profile, 'audit.view'), [profile]);
     const canViewHelpdesk = useMemo(() => hasPermission(profile, 'helpdesk.report.view'), [profile]);
@@ -244,6 +239,8 @@ export default function App() {
     const canCreateEos = useMemo(() => hasPermission(profile, 'eos.update.create'), [profile]);
     const canViewReports = useMemo(() => hasPermission(profile, 'reports.view'), [profile]);
     const canViewNotifications = useMemo(() => hasPermission(profile, 'notifications.view'), [profile]);
+    const canManageNodes = useMemo(() => hasPermission(profile, 'nodes.manage'), [profile]);
+    const canManageIntegrations = useMemo(() => hasPermission(profile, 'integrations.manage'), [profile]);
 
     const updateStatus = async (ticketId, status) => {
         if (!canUpdateTicket) {
@@ -255,6 +252,17 @@ export default function App() {
             await refreshBase();
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to update ticket status');
+        }
+    };
+
+    const createTicket = async (payload) => {
+        try {
+            await api.post('/tickets', payload);
+            await refreshBase();
+            return true;
+        } catch (e) {
+            setError(e?.response?.data?.message || 'Failed to create ticket');
+            return false;
         }
     };
 
@@ -291,8 +299,10 @@ export default function App() {
                 roles: [],
             });
             await refreshContextual('users');
+            return true;
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to create user');
+            return false;
         }
     };
 
@@ -580,6 +590,19 @@ export default function App() {
                         </span>
                         Integrations
                     </button>
+
+                    {canManageNodes ? (
+                        <button
+                            type="button"
+                            className={clsx('cartel-nav-item', menu === 'nodes' && 'cartel-nav-item-active')}
+                            onClick={() => navigateMenu('nodes')}
+                        >
+                            <span className="cartel-nav-icon" aria-hidden="true">
+                                <Icon name="dashboard" />
+                            </span>
+                            Nodes
+                        </button>
+                    ) : null}
                 </nav>
 
                 <div className="cartel-user">
@@ -657,14 +680,23 @@ export default function App() {
                         <TicketBoardView
                             board={board}
                             searchQuery={searchQuery}
+                            canCreateTicket={canCreateTicket}
                             canUpdateTicket={canUpdateTicket}
                             onDragEnd={onDragEnd}
                             sensors={sensors}
                             updateStatus={updateStatus}
+                            createTicket={createTicket}
                         />
                     ) : null}
 
-                    {menu === 'integrations' ? <IntegrationPanel integrations={integrations} /> : null}
+                    {menu === 'integrations' ? (
+                        <IntegrationPanel
+                            integrations={integrations}
+                            canManageIntegrations={canManageIntegrations}
+                            onRefresh={() => refreshBase()}
+                            setError={setError}
+                        />
+                    ) : null}
 
                     {menu === 'helpdesk' && (canViewHelpdesk || canCreateHelpdesk) ? (
                         <HelpdeskPanel
@@ -705,9 +737,14 @@ export default function App() {
                     ) : null}
 
                     {menu === 'audit' && canViewAudit ? <AuditPanel logs={auditLogs} /> : null}
+
+                    {menu === 'nodes' && canManageNodes ? (
+                        <NodesPanel
+                            setError={setError}
+                        />
+                    ) : null}
                 </main>
             </section>
         </div>
     );
 }
-

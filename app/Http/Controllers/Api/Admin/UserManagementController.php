@@ -7,12 +7,15 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserManagementController extends Controller
 {
+    public function __construct(private readonly AuditLogger $auditLogger) {}
+
     public function index(Request $request): JsonResponse
     {
         $q = trim((string) $request->query('q', ''));
@@ -46,12 +49,21 @@ class UserManagementController extends Controller
         $roleIds = Role::query()->whereIn('slug', $validated['roles'] ?? [])->pluck('id')->all();
         $user->roles()->sync($roleIds);
 
+        $this->auditLogger->log($user, 'created', [], [
+            'name' => $user->name,
+            'email' => $user->email,
+            'timezone' => $user->timezone,
+            'is_active' => $user->is_active,
+            'roles' => $validated['roles'] ?? [],
+        ]);
+
         return response()->json($user->load('roles:id,name,slug'), 201);
     }
 
     public function update(UserUpdateRequest $request, User $user): JsonResponse
     {
         $validated = $request->validated();
+        $old = $user->only(['name', 'email', 'timezone', 'telegram_chat_id', 'is_active']);
 
         $payload = [];
         foreach (['name', 'timezone', 'telegram_chat_id'] as $field) {
@@ -81,6 +93,13 @@ class UserManagementController extends Controller
             $user->roles()->sync($roleIds);
         }
 
-        return response()->json($user->fresh()->load('roles:id,name,slug'));
+        $fresh = $user->fresh()->load('roles:id,name,slug');
+        $new = $fresh->only(['name', 'email', 'timezone', 'telegram_chat_id', 'is_active']);
+        $new['roles'] = $fresh->roles->pluck('slug')->all();
+
+        // Never log raw password updates.
+        $this->auditLogger->log($fresh, 'updated', $old, $new);
+
+        return response()->json($fresh);
     }
 }

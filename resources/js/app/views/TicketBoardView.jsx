@@ -1,13 +1,21 @@
 import clsx from 'clsx';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { DndContext, useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 import { columnsOrder, priorityClass, statusLabels } from '../constants';
 import { formatTimer } from '../utils';
+import Modal from '../ui/Modal';
 
-export default function TicketBoardView({ board, searchQuery, canUpdateTicket, onDragEnd, sensors, updateStatus }) {
+const emptyTicket = {
+    title: '',
+    node_name: '',
+    priority: 'P3',
+    description: '',
+};
+
+export default function TicketBoardView({ board, searchQuery, canCreateTicket, canUpdateTicket, onDragEnd, sensors, updateStatus, createTicket }) {
     const q = (searchQuery || '').trim().toLowerCase();
     const filterItems = (items) => {
         if (!q) {
@@ -19,21 +27,91 @@ export default function TicketBoardView({ board, searchQuery, canUpdateTicket, o
         });
     };
 
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [form, setForm] = useState({ ...emptyTicket });
+
+    const totalOpen = useMemo(() => (board.meta?.total_open ?? Object.values(board.columns || {}).flat().filter((t) => t.status !== 'closed').length), [board]);
+
     return (
-        <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-            <section className="ticket-board">
-                {columnsOrder.map((status) => (
-                    <KanbanColumn
-                        key={status}
-                        id={status}
-                        title={statusLabels[status]}
-                        items={filterItems(board.columns?.[status] || [])}
-                        canUpdate={canUpdateTicket}
-                        onQuickStatus={updateStatus}
-                    />
-                ))}
+        <div className="grid gap-4">
+            <section className="cartel-card">
+                <div className="cartel-card-head">
+                    <div>
+                        <div className="cartel-card-title">Incident Kanban</div>
+                        <div className="cartel-card-sub">Drag & drop status. Total open: {totalOpen}.</div>
+                    </div>
+                    {canCreateTicket ? (
+                        <button
+                            className="cartel-btn cartel-btn-strong"
+                            type="button"
+                            onClick={() => {
+                                setForm({ ...emptyTicket });
+                                setIsCreateOpen(true);
+                            }}
+                        >
+                            Add Ticket
+                        </button>
+                    ) : null}
+                </div>
+
+                <DndContext sensors={sensors} onDragEnd={onDragEnd}>
+                    <section className="ticket-board">
+                        {columnsOrder.map((status) => (
+                            <KanbanColumn
+                                key={status}
+                                id={status}
+                                title={statusLabels[status]}
+                                items={filterItems(board.columns?.[status] || [])}
+                                canUpdate={canUpdateTicket}
+                                onQuickStatus={updateStatus}
+                            />
+                        ))}
+                    </section>
+                </DndContext>
             </section>
-        </DndContext>
+
+            <Modal
+                title="Create Ticket"
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                footer={(
+                    <>
+                        <button className="cartel-btn" type="button" onClick={() => setIsCreateOpen(false)}>Cancel</button>
+                        <button className="cartel-btn cartel-btn-strong" type="submit" form="ticket-create-form">Create</button>
+                    </>
+                )}
+            >
+                <form
+                    id="ticket-create-form"
+                    className="grid gap-3"
+                    onSubmit={async (event) => {
+                        event.preventDefault();
+                        const ok = await createTicket({
+                            title: form.title,
+                            node_name: form.node_name || undefined,
+                            priority: form.priority || undefined,
+                            description: form.description || undefined,
+                            source: 'manual',
+                        });
+                        if (ok) {
+                            setIsCreateOpen(false);
+                            setForm({ ...emptyTicket });
+                        }
+                    }}
+                >
+                    <input className="input" placeholder="Title" required value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} />
+                    <input className="input" placeholder="Node name (optional)" value={form.node_name} onChange={(e) => setForm((p) => ({ ...p, node_name: e.target.value }))} />
+                    <select className="input" value={form.priority} onChange={(e) => setForm((p) => ({ ...p, priority: e.target.value }))}>
+                        <option value="P1">P1 (Critical)</option>
+                        <option value="P2">P2 (High)</option>
+                        <option value="P3">P3 (Medium)</option>
+                        <option value="P4">P4 (Low)</option>
+                        <option value="P5">P5 (Planning)</option>
+                    </select>
+                    <textarea className="input" rows={4} placeholder="Description (optional)" value={form.description} onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))} />
+                </form>
+            </Modal>
+        </div>
     );
 }
 
@@ -105,4 +183,3 @@ function TicketCard({ ticket, canUpdate, onQuickStatus }) {
         </div>
     );
 }
-

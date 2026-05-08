@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\AuditLogController;
+use App\Http\Controllers\Api\Admin\NodeManagementController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
+use App\Http\Controllers\Api\Admin\WebhookSourceManagementController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HelpdeskReportController;
@@ -64,6 +66,22 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         ->middleware('permission:users.manage');
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])
         ->middleware('permission:audit.view');
+
+    Route::get('/admin/nodes', [NodeManagementController::class, 'index'])
+        ->middleware('permission:nodes.manage');
+    Route::post('/admin/nodes', [NodeManagementController::class, 'store'])
+        ->middleware('permission:nodes.manage');
+    Route::patch('/admin/nodes/{node}', [NodeManagementController::class, 'update'])
+        ->middleware('permission:nodes.manage');
+
+    Route::get('/admin/webhook-sources', [WebhookSourceManagementController::class, 'index'])
+        ->middleware('permission:integrations.manage');
+    Route::post('/admin/webhook-sources', [WebhookSourceManagementController::class, 'store'])
+        ->middleware('permission:integrations.manage');
+    Route::patch('/admin/webhook-sources/{source}', [WebhookSourceManagementController::class, 'update'])
+        ->middleware('permission:integrations.manage');
+    Route::post('/admin/webhook-sources/{source}/rotate-secret', [WebhookSourceManagementController::class, 'rotateSecret'])
+        ->middleware('permission:integrations.manage');
 
     Route::get('/helpdesk/reports', [HelpdeskReportController::class, 'index'])
         ->middleware('permission:helpdesk.report.view');

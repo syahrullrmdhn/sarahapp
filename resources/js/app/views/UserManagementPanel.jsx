@@ -1,7 +1,11 @@
 import clsx from 'clsx';
-import React from 'react';
+import React, { useState } from 'react';
+
+import Modal from '../ui/Modal';
 
 export default function UserManagementPanel({ users, roles, newUser, setNewUser, createUser, toggleUserActive, setUserRole }) {
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+
     return (
         <section className="cartel-card">
             <div className="cartel-card-head">
@@ -9,40 +13,10 @@ export default function UserManagementPanel({ users, roles, newUser, setNewUser,
                     <div className="cartel-card-title">User Management</div>
                     <div className="cartel-card-sub">Manage accounts, roles, and access.</div>
                 </div>
+                <button className="cartel-btn cartel-btn-strong" type="button" onClick={() => setIsCreateOpen(true)}>
+                    Add User
+                </button>
             </div>
-
-            <form className="user-form" onSubmit={createUser}>
-                <input className="input" placeholder="Full name" required value={newUser.name} onChange={(event) => setNewUser((prev) => ({ ...prev, name: event.target.value }))} />
-                <input className="input" placeholder="Email" required type="email" value={newUser.email} onChange={(event) => setNewUser((prev) => ({ ...prev, email: event.target.value }))} />
-                <input className="input" placeholder="Password" required minLength={10} type="password" value={newUser.password} onChange={(event) => setNewUser((prev) => ({ ...prev, password: event.target.value }))} />
-                <input className="input" placeholder="Timezone" value={newUser.timezone} onChange={(event) => setNewUser((prev) => ({ ...prev, timezone: event.target.value }))} />
-                <label className="toggle-line">
-                    <input type="checkbox" checked={newUser.is_active} onChange={(event) => setNewUser((prev) => ({ ...prev, is_active: event.target.checked }))} />
-                    Active user
-                </label>
-                <div className="role-select-wrap">
-                    {roles.map((role) => {
-                        const checked = newUser.roles.includes(role.slug);
-
-                        return (
-                            <label key={role.slug} className="role-pill">
-                                <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={(event) => {
-                                        setNewUser((prev) => ({
-                                            ...prev,
-                                            roles: event.target.checked ? [...prev.roles, role.slug] : prev.roles.filter((slug) => slug !== role.slug),
-                                        }));
-                                    }}
-                                />
-                                {role.name}
-                            </label>
-                        );
-                    })}
-                </div>
-                <button className="btn-primary" type="submit">Create User</button>
-            </form>
 
             <div className="cartel-table-wrap" style={{ marginTop: 14 }}>
                 <table className="cartel-table">
@@ -89,7 +63,59 @@ export default function UserManagementPanel({ users, roles, newUser, setNewUser,
                     </tbody>
                 </table>
             </div>
+
+            <Modal
+                title="Add User"
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                footer={(
+                    <>
+                        <button className="cartel-btn" type="button" onClick={() => setIsCreateOpen(false)}>Cancel</button>
+                        <button className="cartel-btn cartel-btn-strong" type="submit" form="user-create-form">Create</button>
+                    </>
+                )}
+            >
+                <form
+                    id="user-create-form"
+                    className="grid gap-3 md:grid-cols-2"
+                    onSubmit={async (event) => {
+                        const ok = await createUser(event);
+                        if (ok) {
+                            setIsCreateOpen(false);
+                        }
+                    }}
+                >
+                    <input className="input md:col-span-2" placeholder="Full name" required value={newUser.name} onChange={(event) => setNewUser((prev) => ({ ...prev, name: event.target.value }))} />
+                    <input className="input md:col-span-2" placeholder="Email" required type="email" value={newUser.email} onChange={(event) => setNewUser((prev) => ({ ...prev, email: event.target.value }))} />
+                    <input className="input md:col-span-2" placeholder="Password" required minLength={10} type="password" value={newUser.password} onChange={(event) => setNewUser((prev) => ({ ...prev, password: event.target.value }))} />
+                    <input className="input md:col-span-2" placeholder="Timezone" value={newUser.timezone} onChange={(event) => setNewUser((prev) => ({ ...prev, timezone: event.target.value }))} />
+                    <label className="toggle-line md:col-span-2">
+                        <input type="checkbox" checked={newUser.is_active} onChange={(event) => setNewUser((prev) => ({ ...prev, is_active: event.target.checked }))} />
+                        Active user
+                    </label>
+                    <div className="role-select-wrap md:col-span-2">
+                        {roles.map((role) => {
+                            const checked = newUser.roles.includes(role.slug);
+
+                            return (
+                                <label key={role.slug} className="role-pill">
+                                    <input
+                                        type="checkbox"
+                                        checked={checked}
+                                        onChange={(event) => {
+                                            setNewUser((prev) => ({
+                                                ...prev,
+                                                roles: event.target.checked ? [...prev.roles, role.slug] : prev.roles.filter((slug) => slug !== role.slug),
+                                            }));
+                                        }}
+                                    />
+                                    {role.name}
+                                </label>
+                            );
+                        })}
+                    </div>
+                </form>
+            </Modal>
         </section>
     );
 }
-

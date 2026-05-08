@@ -28,6 +28,8 @@ class RbacSeeder extends Seeder
             ['name' => 'View Helpdesk Reports', 'slug' => 'helpdesk.report.view'],
             ['name' => 'View Operation Reports', 'slug' => 'reports.view'],
             ['name' => 'View Notification Logs', 'slug' => 'notifications.view'],
+            ['name' => 'Manage Nodes', 'slug' => 'nodes.manage'],
+            ['name' => 'Manage Integrations', 'slug' => 'integrations.manage'],
         ];
 
         foreach ($permissions as $permission) {

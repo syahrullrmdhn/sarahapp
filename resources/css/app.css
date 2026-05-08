@@ -637,6 +637,83 @@
         color: var(--text-main);
     }
 
+    /* Modal */
+    .cartel-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+    }
+
+    .cartel-modal-overlay-btn {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.62);
+        border: 0;
+    }
+
+    .cartel-modal {
+        position: relative;
+        z-index: 81;
+        width: min(720px, calc(100vw - 32px));
+        border-radius: 18px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        box-shadow: 0 30px 80px rgba(2, 6, 23, 0.42);
+        overflow: hidden;
+    }
+
+    .cartel-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel) 86%, transparent);
+        backdrop-filter: blur(10px);
+    }
+
+    .cartel-modal-title {
+        font-weight: 950;
+        letter-spacing: -0.02em;
+        color: var(--text-main);
+        font-size: 14px;
+    }
+
+    .cartel-modal-close {
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        background: var(--panel);
+        box-shadow: var(--shadow-xs);
+        font-size: 20px;
+        line-height: 1;
+        color: var(--text-sub);
+    }
+
+    .cartel-modal-close:hover {
+        background: var(--panel-soft);
+        color: var(--text-main);
+    }
+
+    .cartel-modal-body {
+        padding: 16px;
+        color: var(--text-main);
+    }
+
+    .cartel-modal-foot {
+        padding: 14px 16px;
+        border-top: 1px solid var(--panel-border);
+        background: color-mix(in srgb, var(--panel-soft) 68%, transparent);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
     .cartel-overlay {
         display: none;
     }
