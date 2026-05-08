@@ -1076,12 +1076,16 @@ function TicketBoardView({ board, searchQuery, canUpdateTicket, onDragEnd, senso
 
 function IntegrationPanel({ integrations }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>Integrations</h2>
-            <p>Monitoring webhook receiver is active and secured with HMAC signature verification.</p>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">Integrations</div>
+                    <div className="cartel-card-sub">Webhook receiver secured with HMAC signature verification.</div>
+                </div>
+            </div>
 
-            <div className="table-wrap">
-                <table className="table">
+            <div className="cartel-table-wrap">
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Source</th>
@@ -1092,19 +1096,21 @@ function IntegrationPanel({ integrations }) {
                     <tbody>
                         {integrations.webhook_sources.map((source) => (
                             <tr key={source.slug}>
-                                <td>{source.name}</td>
+                                <td className="cartel-table-strong">{source.name}</td>
                                 <td className="mono">{source.slug}</td>
-                                <td>{source.is_active ? 'Active' : 'Inactive'}</td>
+                                <td>{source.is_active ? <span className="cartel-badge">Active</span> : <span className="cartel-badge badge-p1">Inactive</span>}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
 
-            <div className="integration-block">
-                <div className="integration-title">Telegram Webhook Endpoint</div>
-                <div className="mono">{integrations.telegram?.webhook_url || '-'}</div>
-                <div>Secret header: {integrations.telegram?.secret_header || '-'}</div>
+            <div className="cartel-mini-card" style={{ marginTop: 14 }}>
+                <div className="cartel-mini-kicker">Telegram Webhook Endpoint</div>
+                <div className="mono" style={{ marginTop: 8 }}>{integrations.telegram?.webhook_url || '-'}</div>
+                <div className="cartel-mini-sub" style={{ marginTop: 10 }}>
+                    Secret header: <span className="mono">{integrations.telegram?.secret_header || '-'}</span>
+                </div>
             </div>
         </section>
     );
@@ -1112,9 +1118,13 @@ function IntegrationPanel({ integrations }) {
 
 function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newHelpdeskReport, setNewHelpdeskReport, createHelpdeskReport }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>Helpdesk Reports</h2>
-            <p>Intake laporan dari Paragonians (web, WhatsApp, email) dan auto-konversi menjadi tiket incident.</p>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">Helpdesk Reports</div>
+                    <div className="cartel-card-sub">Intake laporan dan auto-konversi menjadi tiket incident.</div>
+                </div>
+            </div>
 
             {canCreateHelpdesk ? (
                 <form className="user-form mt-4" onSubmit={createHelpdeskReport}>
@@ -1177,8 +1187,8 @@ function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newHelpdeskReport, 
                 </form>
             ) : null}
 
-            <div className="table-wrap">
-                <table className="table">
+            <div className="cartel-table-wrap" style={{ marginTop: 14 }}>
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Time</th>
@@ -1192,10 +1202,10 @@ function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newHelpdeskReport, 
                         {helpdeskReports.map((report) => (
                             <tr key={report.id}>
                                 <td>{new Date(report.reported_at).toLocaleString()}</td>
-                                <td>{report.reporter_name}</td>
-                                <td>{report.channel}</td>
+                                <td className="cartel-table-strong">{report.reporter_name}</td>
+                                <td><span className="cartel-badge">{report.channel}</span></td>
                                 <td>{report.title}</td>
-                                <td>{report.ticket?.ticket_code || '-'}</td>
+                                <td className="cartel-table-strong">{report.ticket?.ticket_code || '-'}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -1209,9 +1219,13 @@ function EosPanel({ board, selectedEosTicket, onSelectEosTicket, newEosUpdate, s
     const tickets = Object.values(board.columns || {}).flat();
 
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>EOS Action Updates</h2>
-            <p>Update aksi lapangan EOS (onsite, fix applied, verification) dan sinkron status tiket.</p>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">EOS Action Updates</div>
+                    <div className="cartel-card-sub">Update aksi lapangan EOS dan sinkron status tiket.</div>
+                </div>
+            </div>
 
             <form className="user-form mt-4" onSubmit={createEosUpdate}>
                 <select className="input" value={selectedEosTicket?.id || ''} onChange={(event) => onSelectEosTicket(event.target.value)}>
@@ -1260,8 +1274,8 @@ function EosPanel({ board, selectedEosTicket, onSelectEosTicket, newEosUpdate, s
                 <button className="btn-primary" type="submit">Post EOS Update</button>
             </form>
 
-            <div className="table-wrap">
-                <table className="table">
+            <div className="cartel-table-wrap" style={{ marginTop: 14 }}>
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Time</th>
@@ -1274,9 +1288,9 @@ function EosPanel({ board, selectedEosTicket, onSelectEosTicket, newEosUpdate, s
                         {eosTicketUpdates.map((update) => (
                             <tr key={update.id}>
                                 <td>{new Date(update.created_at).toLocaleString()}</td>
-                                <td>{update.eos_user?.name || 'system'}</td>
-                                <td>{update.action_type}</td>
-                                <td>{update.message}</td>
+                                <td className="cartel-table-strong">{update.eos_user?.name || 'system'}</td>
+                                <td><span className="cartel-badge">{update.action_type}</span></td>
+                                <td style={{ whiteSpace: 'normal' }}>{update.message}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -1288,9 +1302,13 @@ function EosPanel({ board, selectedEosTicket, onSelectEosTicket, newEosUpdate, s
 
 function OperationsReportPanel({ opsReport }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>Consolidated Operations Report</h2>
-            <p>Ringkasan 7 hari terakhir untuk monitoring, helpdesk, ticketing, dan aksi EOS.</p>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">Consolidated Operations Report</div>
+                    <div className="cartel-card-sub">Ringkasan 7 hari terakhir untuk monitoring, helpdesk, ticketing, dan aksi EOS.</div>
+                </div>
+            </div>
 
             <div className="ops-grid">
                 <article className="mini-stat">
@@ -1316,12 +1334,16 @@ function OperationsReportPanel({ opsReport }) {
 
 function NotificationPanel({ logs }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>Notification Logs</h2>
-            <p>Log notifikasi eskalasi dan assignment (telegram/in-app/email placeholder).</p>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">Notification Logs</div>
+                    <div className="cartel-card-sub">Log notifikasi eskalasi dan assignment (telegram/in-app/email placeholder).</div>
+                </div>
+            </div>
 
-            <div className="table-wrap">
-                <table className="table">
+            <div className="cartel-table-wrap">
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Time</th>
@@ -1336,11 +1358,11 @@ function NotificationPanel({ logs }) {
                         {logs.map((log) => (
                             <tr key={log.id}>
                                 <td>{new Date(log.created_at).toLocaleString()}</td>
-                                <td>{log.channel}</td>
-                                <td>{log.event}</td>
+                                <td><span className="cartel-badge">{log.channel}</span></td>
+                                <td className="cartel-table-strong">{log.event}</td>
                                 <td>{log.target || '-'}</td>
-                                <td>{log.ticket?.ticket_code || '-'}</td>
-                                <td>{log.status}</td>
+                                <td className="cartel-table-strong">{log.ticket?.ticket_code || '-'}</td>
+                                <td><span className="cartel-badge">{log.status}</span></td>
                             </tr>
                         ))}
                     </tbody>
@@ -1352,8 +1374,13 @@ function NotificationPanel({ logs }) {
 
 function UserManagementPanel({ users, roles, newUser, setNewUser, createUser, toggleUserActive, setUserRole }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>User Management</h2>
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">User Management</div>
+                    <div className="cartel-card-sub">Manage accounts, roles, and access.</div>
+                </div>
+            </div>
 
             <form className="user-form" onSubmit={createUser}>
                 <input className="input" placeholder="Full name" required value={newUser.name} onChange={(event) => setNewUser((prev) => ({ ...prev, name: event.target.value }))} />
@@ -1388,8 +1415,8 @@ function UserManagementPanel({ users, roles, newUser, setNewUser, createUser, to
                 <button className="btn-primary" type="submit">Create User</button>
             </form>
 
-            <div className="table-wrap">
-                <table className="table">
+            <div className="cartel-table-wrap" style={{ marginTop: 14 }}>
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -1402,9 +1429,9 @@ function UserManagementPanel({ users, roles, newUser, setNewUser, createUser, to
                     <tbody>
                         {users.map((user) => (
                             <tr key={user.id}>
-                                <td>{user.name}</td>
+                                <td className="cartel-table-strong">{user.name}</td>
                                 <td>{user.email}</td>
-                                <td>{user.is_active ? 'Active' : 'Disabled'}</td>
+                                <td>{user.is_active ? <span className="cartel-badge">Active</span> : <span className="cartel-badge badge-p1">Disabled</span>}</td>
                                 <td>
                                     <div className="role-action-wrap">
                                         {roles.map((role) => {
@@ -1439,10 +1466,15 @@ function UserManagementPanel({ users, roles, newUser, setNewUser, createUser, to
 
 function AuditPanel({ logs }) {
     return (
-        <section className="panel-elevated detail-panel">
-            <h2>Audit Log</h2>
-            <div className="table-wrap">
-                <table className="table">
+        <section className="cartel-card">
+            <div className="cartel-card-head">
+                <div>
+                    <div className="cartel-card-title">Audit Log</div>
+                    <div className="cartel-card-sub">Every mutation is tracked for accountability.</div>
+                </div>
+            </div>
+            <div className="cartel-table-wrap">
+                <table className="cartel-table">
                     <thead>
                         <tr>
                             <th>Time</th>
@@ -1455,8 +1487,8 @@ function AuditPanel({ logs }) {
                         {logs.map((log) => (
                             <tr key={log.id}>
                                 <td>{new Date(log.created_at).toLocaleString()}</td>
-                                <td>{log.user?.name || 'system'}</td>
-                                <td>{log.action}</td>
+                                <td className="cartel-table-strong">{log.user?.name || 'system'}</td>
+                                <td className="cartel-table-strong">{log.action}</td>
                                 <td>{log.auditable_type}#{log.auditable_id}</td>
                             </tr>
                         ))}
