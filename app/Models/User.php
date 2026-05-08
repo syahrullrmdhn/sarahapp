@@ -80,4 +80,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Ticket::class, 'assignee_id');
     }
+
+    public function eosUpdates(): HasMany
+    {
+        return $this->hasMany(TicketEosUpdate::class, 'eos_user_id');
+    }
 }

@@ -432,11 +432,34 @@
         @apply mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3;
     }
 
+    .ops-grid {
+        @apply mt-4 grid gap-3 md:grid-cols-2;
+    }
+
+    .mini-stat {
+        @apply rounded-xl border p-3;
+        border-color: var(--panel-border);
+        background: var(--panel-soft);
+    }
+
+    .mini-stat h3 {
+        @apply mb-2 text-sm font-bold;
+    }
+
+    .mini-stat pre {
+        @apply overflow-auto rounded-lg p-2 text-xs;
+        background: color-mix(in srgb, var(--panel) 70%, transparent);
+    }
+
     .input {
         @apply w-full rounded-xl border px-3 py-2 text-sm outline-none;
         border-color: var(--panel-border);
         background: var(--panel-soft);
         color: var(--text-main);
+    }
+
+    textarea.input {
+        @apply min-h-28;
     }
 
     .input:focus {

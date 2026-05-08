@@ -6,6 +6,7 @@ use App\Domain\Tickets\TicketStatus;
 use App\Events\TicketUpdated;
 use App\Models\Ticket;
 use App\Models\TicketActivity;
+use App\Services\NotificationDispatchService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +41,8 @@ class EscalateOverdueTicketsCommand extends Command
             ]);
 
             event(new TicketUpdated($ticket, 'auto_escalated'));
+
+            app(NotificationDispatchService::class)->notifyEscalation($ticket);
 
             Log::warning('Ticket escalated automatically', [
                 'ticket_id' => $ticket->id,

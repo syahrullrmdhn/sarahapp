@@ -16,7 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class TicketService
 {
-    public function __construct(private readonly PriorityResolver $priorityResolver) {}
+    public function __construct(
+        private readonly PriorityResolver $priorityResolver,
+        private readonly NotificationDispatchService $notificationDispatchService,
+    ) {}
 
     public function createTicket(array $payload, ?User $creator = null): Ticket
     {
@@ -96,6 +99,16 @@ class TicketService
             ],
         ]);
 
+        if ($status === TicketStatus::RESOLVED || $status === TicketStatus::CLOSED) {
+            $this->notificationDispatchService->log(
+                'in_app',
+                $ticket->reporter?->email,
+                $ticket,
+                'ticket_status_updated',
+                sprintf('Ticket %s telah diubah ke status %s.', $ticket->ticket_code, $status),
+            );
+        }
+
         event(new TicketUpdated($ticket, 'status_updated'));
 
         return $ticket->fresh(['assignee:id,name', 'reporter:id,name', 'node:id,name,criticality_level']) ?? $ticket;
@@ -120,6 +133,18 @@ class TicketService
                 'to' => $assigneeId,
             ],
         ]);
+
+        $assignee = User::query()->find($assigneeId);
+        if ($assignee) {
+            $this->notificationDispatchService->log(
+                'telegram',
+                $assignee->telegram_chat_id,
+                $ticket,
+                'assigned',
+                sprintf('Anda ditugaskan ke tiket %s', $ticket->ticket_code),
+                ['target_user_id' => $assignee->id],
+            );
+        }
 
         event(new TicketUpdated($ticket, 'assigned'));
 

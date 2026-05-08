@@ -89,4 +89,14 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketActivity::class);
     }
+
+    public function eosUpdates(): HasMany
+    {
+        return $this->hasMany(TicketEosUpdate::class);
+    }
+
+    public function notificationLogs(): HasMany
+    {
+        return $this->hasMany(NotificationLog::class);
+    }
 }

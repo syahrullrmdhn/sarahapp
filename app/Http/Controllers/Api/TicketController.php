@@ -84,7 +84,13 @@ class TicketController extends Controller
 
     public function show(Ticket $ticket): JsonResponse
     {
-        $ticket->load(['assignee:id,name,email', 'reporter:id,name,email', 'node:id,name,criticality_level', 'activities.user:id,name']);
+        $ticket->load([
+            'assignee:id,name,email',
+            'reporter:id,name,email',
+            'node:id,name,criticality_level',
+            'activities.user:id,name',
+            'eosUpdates.eosUser:id,name,email',
+        ]);
 
         return response()->json($ticket);
     }

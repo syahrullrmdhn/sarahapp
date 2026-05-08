@@ -36,7 +36,11 @@ const priorityClass = {
 
 const secondarySidebarItems = [
     { key: 'tickets', label: 'Incident Kanban' },
+    { key: 'helpdesk', label: 'Helpdesk Reports' },
+    { key: 'eos', label: 'EOS Action Updates', permission: 'eos.update.create' },
     { key: 'integrations', label: 'Monitoring Integrations' },
+    { key: 'reports', label: 'Ops Consolidated Reports', permission: 'reports.view' },
+    { key: 'notifications', label: 'Notification Logs', permission: 'notifications.view' },
     { key: 'users', label: 'User Management', permission: 'users.manage' },
     { key: 'audit', label: 'Audit Log', permission: 'audit.view' },
 ];
@@ -75,6 +79,11 @@ function App() {
     const [users, setUsers] = useState([]);
     const [roles, setRoles] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
+    const [helpdeskReports, setHelpdeskReports] = useState([]);
+    const [eosTicketUpdates, setEosTicketUpdates] = useState([]);
+    const [opsReport, setOpsReport] = useState(null);
+    const [notificationLogs, setNotificationLogs] = useState([]);
+    const [selectedEosTicket, setSelectedEosTicket] = useState(null);
 
     const [newUser, setNewUser] = useState({
         name: '',
@@ -83,6 +92,23 @@ function App() {
         timezone: 'Asia/Jakarta',
         is_active: true,
         roles: [],
+    });
+    const [newHelpdeskReport, setNewHelpdeskReport] = useState({
+        reporter_name: '',
+        reporter_contact: '',
+        channel: 'web',
+        title: '',
+        description: '',
+        location: '',
+        impact_level: '',
+        node_name: '',
+        severity_input: '',
+    });
+    const [newEosUpdate, setNewEosUpdate] = useState({
+        action_type: 'update',
+        message: '',
+        attachment_url: '',
+        status: '',
     });
 
     const sensors = useSensors(useSensor(PointerSensor));
@@ -160,6 +186,34 @@ function App() {
                 const auditRes = await api.get('/admin/audit-logs');
                 setAuditLogs(auditRes.data.data || []);
             }
+
+            if (nextMenu === 'helpdesk' && hasPermission(userProfile, 'helpdesk.report.view')) {
+                const helpdeskRes = await api.get('/helpdesk/reports');
+                setHelpdeskReports(helpdeskRes.data.data || []);
+            }
+
+            if (nextMenu === 'reports' && hasPermission(userProfile, 'reports.view')) {
+                const opsRes = await api.get('/reports/operations');
+                setOpsReport(opsRes.data);
+            }
+
+            if (nextMenu === 'notifications' && hasPermission(userProfile, 'notifications.view')) {
+                const notifRes = await api.get('/notifications');
+                setNotificationLogs(notifRes.data.data || []);
+            }
+
+            if (nextMenu === 'eos' && hasPermission(userProfile, 'eos.update.create')) {
+                const availableTickets = Object.values(board.columns || {}).flat();
+                const pickedTicket = selectedEosTicket || availableTickets[0] || null;
+                setSelectedEosTicket(pickedTicket);
+
+                if (pickedTicket) {
+                    const eosRes = await api.get(`/tickets/${pickedTicket.id}/eos-updates`);
+                    setEosTicketUpdates(eosRes.data.data || []);
+                } else {
+                    setEosTicketUpdates([]);
+                }
+            }
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to fetch contextual data');
         }
@@ -206,11 +260,21 @@ function App() {
         setUsers([]);
         setRoles([]);
         setAuditLogs([]);
+        setHelpdeskReports([]);
+        setEosTicketUpdates([]);
+        setOpsReport(null);
+        setNotificationLogs([]);
+        setSelectedEosTicket(null);
     };
 
     const canUpdateTicket = useMemo(() => hasPermission(profile, 'tickets.update'), [profile]);
     const canManageUsers = useMemo(() => hasPermission(profile, 'users.manage'), [profile]);
     const canViewAudit = useMemo(() => hasPermission(profile, 'audit.view'), [profile]);
+    const canViewHelpdesk = useMemo(() => hasPermission(profile, 'helpdesk.report.view'), [profile]);
+    const canCreateHelpdesk = useMemo(() => hasPermission(profile, 'helpdesk.report.create'), [profile]);
+    const canCreateEos = useMemo(() => hasPermission(profile, 'eos.update.create'), [profile]);
+    const canViewReports = useMemo(() => hasPermission(profile, 'reports.view'), [profile]);
+    const canViewNotifications = useMemo(() => hasPermission(profile, 'notifications.view'), [profile]);
 
     const updateStatus = async (ticketId, status) => {
         if (!canUpdateTicket) {
@@ -281,6 +345,80 @@ function App() {
             await refreshContextual('users');
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to update user role');
+        }
+    };
+
+    const createHelpdeskReport = async (event) => {
+        event.preventDefault();
+
+        try {
+            await api.post('/helpdesk/reports', newHelpdeskReport);
+            setNewHelpdeskReport({
+                reporter_name: '',
+                reporter_contact: '',
+                channel: 'web',
+                title: '',
+                description: '',
+                location: '',
+                impact_level: '',
+                node_name: '',
+                severity_input: '',
+            });
+            await refreshBase();
+            await refreshContextual('helpdesk');
+            setMenu('tickets');
+        } catch (e) {
+            setError(e?.response?.data?.message || 'Failed to submit helpdesk report');
+        }
+    };
+
+    const onSelectEosTicket = async (ticketId) => {
+        if (!ticketId) {
+            setSelectedEosTicket(null);
+            setEosTicketUpdates([]);
+            return;
+        }
+
+        const ticket = Object.values(board.columns || {})
+            .flat()
+            .find((item) => item.id === Number(ticketId));
+
+        setSelectedEosTicket(ticket || null);
+
+        try {
+            const eosRes = await api.get(`/tickets/${ticketId}/eos-updates`);
+            setEosTicketUpdates(eosRes.data.data || []);
+        } catch (e) {
+            setError(e?.response?.data?.message || 'Failed to fetch EOS updates');
+        }
+    };
+
+    const createEosUpdate = async (event) => {
+        event.preventDefault();
+
+        if (!selectedEosTicket) {
+            setError('Please select a ticket first');
+            return;
+        }
+
+        try {
+            const payload = {
+                action_type: newEosUpdate.action_type,
+                message: newEosUpdate.message,
+                attachment_url: newEosUpdate.attachment_url || undefined,
+                status: newEosUpdate.status || undefined,
+            };
+            await api.post(`/tickets/${selectedEosTicket.id}/eos-updates`, payload);
+            setNewEosUpdate({
+                action_type: 'update',
+                message: '',
+                attachment_url: '',
+                status: '',
+            });
+            await onSelectEosTicket(selectedEosTicket.id);
+            await refreshBase();
+        } catch (e) {
+            setError(e?.response?.data?.message || 'Failed to submit EOS update');
         }
     };
 
@@ -434,6 +572,32 @@ function App() {
 
                     {menu === 'integrations' ? <IntegrationPanel integrations={integrations} /> : null}
 
+                    {menu === 'helpdesk' && (canViewHelpdesk || canCreateHelpdesk) ? (
+                        <HelpdeskPanel
+                            canCreateHelpdesk={canCreateHelpdesk}
+                            helpdeskReports={helpdeskReports}
+                            newHelpdeskReport={newHelpdeskReport}
+                            setNewHelpdeskReport={setNewHelpdeskReport}
+                            createHelpdeskReport={createHelpdeskReport}
+                        />
+                    ) : null}
+
+                    {menu === 'eos' && canCreateEos ? (
+                        <EosPanel
+                            board={board}
+                            selectedEosTicket={selectedEosTicket}
+                            onSelectEosTicket={onSelectEosTicket}
+                            newEosUpdate={newEosUpdate}
+                            setNewEosUpdate={setNewEosUpdate}
+                            createEosUpdate={createEosUpdate}
+                            eosTicketUpdates={eosTicketUpdates}
+                        />
+                    ) : null}
+
+                    {menu === 'reports' && canViewReports ? <OperationsReportPanel opsReport={opsReport} /> : null}
+
+                    {menu === 'notifications' && canViewNotifications ? <NotificationPanel logs={notificationLogs} /> : null}
+
                     {menu === 'users' && canManageUsers ? (
                         <UserManagementPanel
                             users={users}
@@ -568,6 +732,246 @@ function IntegrationPanel({ integrations }) {
                 <div className="integration-title">Telegram Webhook Endpoint</div>
                 <div className="mono">{integrations.telegram?.webhook_url || '-'}</div>
                 <div>Secret header: {integrations.telegram?.secret_header || '-'}</div>
+            </div>
+        </section>
+    );
+}
+
+function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newHelpdeskReport, setNewHelpdeskReport, createHelpdeskReport }) {
+    return (
+        <section className="panel-elevated detail-panel">
+            <h2>Helpdesk Reports</h2>
+            <p>Intake laporan dari Paragonians (web, WhatsApp, email) dan auto-konversi menjadi tiket incident.</p>
+
+            {canCreateHelpdesk ? (
+                <form className="user-form mt-4" onSubmit={createHelpdeskReport}>
+                    <input
+                        className="input"
+                        placeholder="Reporter name"
+                        required
+                        value={newHelpdeskReport.reporter_name}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, reporter_name: event.target.value }))}
+                    />
+                    <input
+                        className="input"
+                        placeholder="Reporter contact"
+                        value={newHelpdeskReport.reporter_contact}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, reporter_contact: event.target.value }))}
+                    />
+                    <select
+                        className="input"
+                        value={newHelpdeskReport.channel}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, channel: event.target.value }))}
+                    >
+                        <option value="web">Web</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="email">Email</option>
+                    </select>
+                    <input
+                        className="input md:col-span-2"
+                        placeholder="Issue title"
+                        required
+                        value={newHelpdeskReport.title}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, title: event.target.value }))}
+                    />
+                    <input
+                        className="input"
+                        placeholder="Location"
+                        value={newHelpdeskReport.location}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, location: event.target.value }))}
+                    />
+                    <input
+                        className="input"
+                        placeholder="Node name"
+                        value={newHelpdeskReport.node_name}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, node_name: event.target.value }))}
+                    />
+                    <input
+                        className="input"
+                        placeholder="Impact (critical/high/medium/low)"
+                        value={newHelpdeskReport.impact_level}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, impact_level: event.target.value }))}
+                    />
+                    <textarea
+                        className="input md:col-span-3"
+                        placeholder="Incident description"
+                        rows={4}
+                        required
+                        value={newHelpdeskReport.description}
+                        onChange={(event) => setNewHelpdeskReport((prev) => ({ ...prev, description: event.target.value }))}
+                    />
+                    <button className="btn-primary" type="submit">Submit To Helpdesk</button>
+                </form>
+            ) : null}
+
+            <div className="table-wrap">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Reporter</th>
+                            <th>Channel</th>
+                            <th>Title</th>
+                            <th>Ticket</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {helpdeskReports.map((report) => (
+                            <tr key={report.id}>
+                                <td>{new Date(report.reported_at).toLocaleString()}</td>
+                                <td>{report.reporter_name}</td>
+                                <td>{report.channel}</td>
+                                <td>{report.title}</td>
+                                <td>{report.ticket?.ticket_code || '-'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+}
+
+function EosPanel({ board, selectedEosTicket, onSelectEosTicket, newEosUpdate, setNewEosUpdate, createEosUpdate, eosTicketUpdates }) {
+    const tickets = Object.values(board.columns || {}).flat();
+
+    return (
+        <section className="panel-elevated detail-panel">
+            <h2>EOS Action Updates</h2>
+            <p>Update aksi lapangan EOS (onsite, fix applied, verification) dan sinkron status tiket.</p>
+
+            <form className="user-form mt-4" onSubmit={createEosUpdate}>
+                <select className="input" value={selectedEosTicket?.id || ''} onChange={(event) => onSelectEosTicket(event.target.value)}>
+                    <option value="">Select ticket</option>
+                    {tickets.map((ticket) => (
+                        <option key={ticket.id} value={ticket.id}>
+                            {ticket.ticket_code} - {ticket.title}
+                        </option>
+                    ))}
+                </select>
+                <select
+                    className="input"
+                    value={newEosUpdate.action_type}
+                    onChange={(event) => setNewEosUpdate((prev) => ({ ...prev, action_type: event.target.value }))}
+                >
+                    <option value="update">Update</option>
+                    <option value="onsite">Onsite</option>
+                    <option value="fix_applied">Fix applied</option>
+                    <option value="verification">Verification</option>
+                </select>
+                <select
+                    className="input"
+                    value={newEosUpdate.status}
+                    onChange={(event) => setNewEosUpdate((prev) => ({ ...prev, status: event.target.value }))}
+                >
+                    <option value="">No status change</option>
+                    <option value="acknowledged">Acknowledged</option>
+                    <option value="in_progress">In progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                </select>
+                <input
+                    className="input md:col-span-2"
+                    placeholder="Attachment URL (optional)"
+                    value={newEosUpdate.attachment_url}
+                    onChange={(event) => setNewEosUpdate((prev) => ({ ...prev, attachment_url: event.target.value }))}
+                />
+                <textarea
+                    className="input md:col-span-3"
+                    rows={4}
+                    required
+                    placeholder="Field action update detail"
+                    value={newEosUpdate.message}
+                    onChange={(event) => setNewEosUpdate((prev) => ({ ...prev, message: event.target.value }))}
+                />
+                <button className="btn-primary" type="submit">Post EOS Update</button>
+            </form>
+
+            <div className="table-wrap">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>EOS</th>
+                            <th>Action</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {eosTicketUpdates.map((update) => (
+                            <tr key={update.id}>
+                                <td>{new Date(update.created_at).toLocaleString()}</td>
+                                <td>{update.eos_user?.name || 'system'}</td>
+                                <td>{update.action_type}</td>
+                                <td>{update.message}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    );
+}
+
+function OperationsReportPanel({ opsReport }) {
+    return (
+        <section className="panel-elevated detail-panel">
+            <h2>Consolidated Operations Report</h2>
+            <p>Ringkasan 7 hari terakhir untuk monitoring, helpdesk, ticketing, dan aksi EOS.</p>
+
+            <div className="ops-grid">
+                <article className="mini-stat">
+                    <h3>By Priority</h3>
+                    <pre>{JSON.stringify(opsReport?.tickets_by_priority || {}, null, 2)}</pre>
+                </article>
+                <article className="mini-stat">
+                    <h3>By Status</h3>
+                    <pre>{JSON.stringify(opsReport?.tickets_by_status || {}, null, 2)}</pre>
+                </article>
+                <article className="mini-stat">
+                    <h3>Helpdesk Channels</h3>
+                    <pre>{JSON.stringify(opsReport?.helpdesk_channels || {}, null, 2)}</pre>
+                </article>
+                <article className="mini-stat">
+                    <h3>EOS Actions</h3>
+                    <pre>{JSON.stringify(opsReport?.eos_actions || {}, null, 2)}</pre>
+                </article>
+            </div>
+        </section>
+    );
+}
+
+function NotificationPanel({ logs }) {
+    return (
+        <section className="panel-elevated detail-panel">
+            <h2>Notification Logs</h2>
+            <p>Log notifikasi eskalasi dan assignment (telegram/in-app/email placeholder).</p>
+
+            <div className="table-wrap">
+                <table className="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Channel</th>
+                            <th>Event</th>
+                            <th>Target</th>
+                            <th>Ticket</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {logs.map((log) => (
+                            <tr key={log.id}>
+                                <td>{new Date(log.created_at).toLocaleString()}</td>
+                                <td>{log.channel}</td>
+                                <td>{log.event}</td>
+                                <td>{log.target || '-'}</td>
+                                <td>{log.ticket?.ticket_code || '-'}</td>
+                                <td>{log.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </section>
     );

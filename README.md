@@ -11,6 +11,7 @@ Implementasi awal sistem SARAH berbasis **Laravel 13 + React + Tailwind**, menca
 - Audit trail perubahan data tiket
 - Phoenix Dashboard (React) dengan Kanban drag-and-drop + countdown SLA
 - Multi-menu view: Dashboard, Ticket Board, Integrations, User Management, Audit Log
+- Alur Helpdesk -> Ticket -> EOS Action Update -> Notification Log -> Ops Report
 
 ## Stack
 
@@ -57,6 +58,7 @@ composer run dev
 - superadmin@sarah.local / `S4rahSecure!2026`
 - noclead@sarah.local / `N0cLeadSecure!2026`
 - nocstaff@sarah.local / `N0cStaffSecure!2026`
+- eos@sarah.local / `E0SSecure!2026`
 
 ## Endpoint API Penting
 
@@ -81,6 +83,18 @@ composer run dev
 - `PATCH /api/admin/users/{user}`
 - `GET /api/admin/roles`
 - `GET /api/admin/audit-logs`
+
+### Helpdesk & EOS
+
+- `POST /api/helpdesk/reports` (public intake: web/whatsapp/email)
+- `GET /api/helpdesk/reports`
+- `GET /api/tickets/{ticket}/eos-updates`
+- `POST /api/tickets/{ticket}/eos-updates`
+
+### Ops Reporting & Notification Logs
+
+- `GET /api/reports/operations`
+- `GET /api/notifications`
 
 ### Monitoring Ingest
 

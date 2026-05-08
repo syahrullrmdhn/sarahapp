@@ -5,9 +5,13 @@ use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\UserManagementController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\HelpdeskReportController;
 use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\NotificationLogController;
+use App\Http\Controllers\Api\OperationsReportController;
 use App\Http\Controllers\Api\TelegramWebhookController;
 use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\TicketEosUpdateController;
 use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +28,8 @@ Route::post('/webhooks/{source}', [WebhookController::class, 'ingest'])
 
 Route::post('/integrations/telegram/webhook', [TelegramWebhookController::class, 'handle'])
     ->middleware('throttle:telegram');
+Route::post('/helpdesk/reports', [HelpdeskReportController::class, 'store'])
+    ->middleware('throttle:api');
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats'])
@@ -43,6 +49,10 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         ->middleware('permission:tickets.update');
     Route::patch('/tickets/{ticket}/assign', [TicketController::class, 'assign'])
         ->middleware('permission:tickets.assign');
+    Route::get('/tickets/{ticket}/eos-updates', [TicketEosUpdateController::class, 'index'])
+        ->middleware('permission:tickets.view');
+    Route::post('/tickets/{ticket}/eos-updates', [TicketEosUpdateController::class, 'store'])
+        ->middleware('permission:eos.update.create');
 
     Route::get('/admin/users', [UserManagementController::class, 'index'])
         ->middleware('permission:users.manage');
@@ -54,4 +64,11 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         ->middleware('permission:users.manage');
     Route::get('/admin/audit-logs', [AuditLogController::class, 'index'])
         ->middleware('permission:audit.view');
+
+    Route::get('/helpdesk/reports', [HelpdeskReportController::class, 'index'])
+        ->middleware('permission:helpdesk.report.view');
+    Route::get('/reports/operations', [OperationsReportController::class, 'summary'])
+        ->middleware('permission:reports.view');
+    Route::get('/notifications', [NotificationLogController::class, 'index'])
+        ->middleware('permission:notifications.view');
 });
