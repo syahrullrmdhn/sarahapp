@@ -2,33 +2,29 @@ import React from 'react';
 
 export default function OperationsReportPanel({ opsReport }) {
     return (
-        <section className="cartel-card">
-            <div className="cartel-card-head">
-                <div>
-                    <div className="cartel-card-title">Consolidated Operations Report</div>
-                    <div className="cartel-card-sub">Ringkasan 7 hari terakhir untuk monitoring, helpdesk, ticketing, dan aksi EOS.</div>
-                </div>
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-xl font-medium text-slate-900 dark:text-slate-100">Operations report</h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Ringkasan 7 hari terakhir untuk monitoring, helpdesk, ticketing, dan aksi EOS.</p>
             </div>
 
-            <div className="ops-grid">
-                <article className="mini-stat">
-                    <h3>By Priority</h3>
-                    <pre>{JSON.stringify(opsReport?.tickets_by_priority || {}, null, 2)}</pre>
-                </article>
-                <article className="mini-stat">
-                    <h3>By Status</h3>
-                    <pre>{JSON.stringify(opsReport?.tickets_by_status || {}, null, 2)}</pre>
-                </article>
-                <article className="mini-stat">
-                    <h3>Helpdesk Channels</h3>
-                    <pre>{JSON.stringify(opsReport?.helpdesk_channels || {}, null, 2)}</pre>
-                </article>
-                <article className="mini-stat">
-                    <h3>EOS Actions</h3>
-                    <pre>{JSON.stringify(opsReport?.eos_actions || {}, null, 2)}</pre>
-                </article>
-            </div>
-        </section>
+            <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <StatBlock title="By priority" payload={opsReport?.tickets_by_priority || {}} />
+                <StatBlock title="By status" payload={opsReport?.tickets_by_status || {}} />
+                <StatBlock title="Helpdesk channels" payload={opsReport?.helpdesk_channels || {}} />
+                <StatBlock title="EOS actions" payload={opsReport?.eos_actions || {}} />
+            </section>
+        </div>
     );
 }
 
+function StatBlock({ title, payload }) {
+    return (
+        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-base font-medium text-slate-900 dark:text-slate-100">{title}</div>
+            <pre className="mt-3 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200">
+                {JSON.stringify(payload, null, 2)}
+            </pre>
+        </article>
+    );
+}

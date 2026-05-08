@@ -4,7 +4,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Helpdesk Reports</h2>
+                <h2 className="text-xl font-medium text-slate-900 dark:text-slate-100">Helpdesk Reports</h2>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     Intake laporan dan auto-konversi menjadi tiket incident.
                 </p>
@@ -14,7 +14,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
                 <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <div className="text-base font-semibold text-slate-900 dark:text-slate-100">New report</div>
+                            <div className="text-base font-medium text-slate-900 dark:text-slate-100">New report</div>
                             <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Lengkapi detail insiden, lalu submit ke tim helpdesk.</div>
                         </div>
                     </div>
@@ -94,7 +94,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
 
                         <div className="md:col-span-2 flex items-center justify-end pt-2">
                             <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
                                 type="submit"
                             >
                                 Submit to helpdesk
@@ -106,7 +106,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
 
             <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                    <div className="text-base font-semibold text-slate-900 dark:text-slate-100">Recent reports</div>
+                    <div className="text-base font-medium text-slate-900 dark:text-slate-100">Recent reports</div>
                     <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">Riwayat laporan terakhir yang masuk.</div>
                 </div>
 
@@ -114,11 +114,11 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
                     <table className="min-w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-950/40">
                             <tr>
-                                <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Time</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Reporter</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Channel</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Title</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400">Ticket</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Time</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Reporter</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Channel</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Title</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Ticket</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -127,7 +127,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
                                     <td className="px-6 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                         {new Date(report.reported_at).toLocaleString()}
                                     </td>
-                                    <td className="px-6 py-3 font-semibold text-slate-900 dark:text-slate-100">
+                                    <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100">
                                         {report.reporter_name}
                                     </td>
                                     <td className="px-6 py-3">
@@ -138,7 +138,7 @@ export default function HelpdeskPanel({ canCreateHelpdesk, helpdeskReports, newH
                                     <td className="px-6 py-3 text-slate-700 dark:text-slate-200">
                                         {report.title}
                                     </td>
-                                    <td className="px-6 py-3 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                                    <td className="px-6 py-3 font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
                                         {report.ticket?.ticket_code || '-'}
                                     </td>
                                 </tr>

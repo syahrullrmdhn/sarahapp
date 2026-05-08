@@ -21,19 +21,36 @@ export default function Modal({ title, children, isOpen, onClose, footer }) {
     }
 
     return (
-        <div className="cartel-modal-backdrop" role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
-            <div className="cartel-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="cartel-modal-head">
-                    <div className="cartel-modal-title">{title}</div>
-                    <button type="button" className="cartel-modal-close" onClick={onClose} aria-label="Close">
-                        ×
+        <div className="fixed inset-0 z-[90] grid place-items-center p-4" role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
+            <button
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
+                type="button"
+                onClick={onClose}
+                aria-label="Close dialog overlay"
+            />
+
+            <div
+                className="relative z-[91] w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(2,6,23,0.55)] dark:border-slate-800 dark:bg-slate-900"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white/70 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
+                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{title}</div>
+                    <button
+                        type="button"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-800"
+                        onClick={onClose}
+                        aria-label="Close"
+                    >
+                        <span className="text-xl leading-none">×</span>
                     </button>
                 </div>
-                <div className="cartel-modal-body">{children}</div>
-                {footer ? <div className="cartel-modal-foot">{footer}</div> : null}
+                <div className="px-5 py-5 text-slate-900 dark:text-slate-100">{children}</div>
+                {footer ? (
+                    <div className="flex items-center justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-4 dark:border-slate-800 dark:bg-slate-950/40">
+                        {footer}
+                    </div>
+                ) : null}
             </div>
-            <button type="button" className="cartel-modal-overlay-btn" onClick={onClose} aria-label="Close dialog overlay" />
         </div>
     );
 }
-

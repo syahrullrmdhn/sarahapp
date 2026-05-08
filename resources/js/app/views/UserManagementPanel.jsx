@@ -198,128 +198,207 @@ export default function UserManagementPanel({ setError }) {
     };
 
     return (
-        <section className="cartel-card cartel-table-card">
-            <div className="cartel-card-head">
-                <div>
-                    <div className="cartel-card-title">User Management</div>
-                    <div className="cartel-card-sub">Manage accounts, roles, and access. {filteredLabel}.</div>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap justify-end">
-                    <label className="cartel-search" style={{ width: 280 }}>
-                        <span className="cartel-search-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-xl font-medium text-slate-900 dark:text-slate-100">User management</h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                    Manage accounts, roles, and access. {filteredLabel}.
+                </p>
+            </div>
+
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600 border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:ring-2 focus-within:ring-slate-100 transition-all dark:bg-slate-900 dark:text-slate-300 dark:focus-within:bg-slate-900 dark:focus-within:border-slate-700 dark:focus-within:ring-slate-800">
+                            <svg className="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
                                 <path d="M16.5 16.5 21 21" />
                             </svg>
-                        </span>
-                        <input
-                            className="cartel-search-input"
-                            placeholder="Search name/email"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                        />
-                    </label>
-                    <select className="input" style={{ width: 110 }} value={perPage} onChange={(e) => setPerPage(Number(e.target.value))}>
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                    </select>
-                    <button className="cartel-btn cartel-btn-strong" type="button" onClick={openCreate}>
-                        Add User
+                            <input
+                                className="w-64 bg-transparent outline-none placeholder:text-slate-400"
+                                placeholder="Search name/email"
+                                value={q}
+                                onChange={(e) => setQ(e.target.value)}
+                            />
+                        </label>
+                        <select
+                            className="h-[40px] rounded-full border border-slate-200 bg-white px-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                            value={perPage}
+                            onChange={(e) => setPerPage(Number(e.target.value))}
+                            aria-label="Rows per page"
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                    </div>
+                    <button
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
+                        type="button"
+                        onClick={openCreate}
+                    >
+                        Add user
                     </button>
                 </div>
-            </div>
 
-            <div className="cartel-table-wrap">
-                <table className="cartel-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Status</th>
-                            <th className="cartel-nowrap">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {usersPage.data.map((user) => (
-                            <tr key={user.id}>
-                                <td className="cartel-table-strong">{user.name}</td>
-                                <td className="cartel-truncate">{user.email}</td>
-                                <td>
-                                    <div className="role-action-wrap">
-                                        {(user.roles || []).length ? (
-                                            user.roles.map((role) => (
-                                                <span key={`${user.id}-${role.slug}`} className="role-pill">
-                                                    {role.slug}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <span className="cartel-badge">none</span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td>
-                                    {user.is_active ? (
-                                        <span className="cartel-badge">Active</span>
-                                    ) : (
-                                        <span className="cartel-badge badge-p1">Disabled</span>
-                                    )}
-                                </td>
-                                <td className="cartel-nowrap">
-                                    <div className="flex items-center gap-2">
-                                        <button className="cartel-btn" type="button" onClick={() => openEdit(user)}>
-                                            Edit
-                                        </button>
-                                        <button className="cartel-btn" type="button" onClick={() => toggleUserActive(user)} disabled={isLoading}>
-                                            {user.is_active ? 'Disable' : 'Enable'}
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {usersPage.data.length === 0 ? (
+                <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                        <thead className="bg-slate-50 dark:bg-slate-950/40">
                             <tr>
-                                <td colSpan={5} className="cartel-empty">
-                                    {isLoading ? 'Loading...' : 'No users found.'}
-                                </td>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Name</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Email</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Roles</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Status</th>
+                                <th className="px-6 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">Action</th>
                             </tr>
-                        ) : null}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                            {usersPage.data.map((user) => (
+                                <tr key={user.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-950/30">
+                                    <td className="px-6 py-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">{user.name}</td>
+                                    <td className="px-6 py-3 text-slate-500 dark:text-slate-400">{user.email}</td>
+                                    <td className="px-6 py-3">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {(user.roles || []).length ? (
+                                                user.roles.map((role) => (
+                                                    <span key={`${user.id}-${role.slug}`} className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200">
+                                                        {role.slug}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-200">
+                                                    none
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-3">
+                                        {user.is_active ? (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900/40 px-2.5 py-1 text-xs font-medium">
+                                                Active
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900/40 px-2.5 py-1 text-xs font-medium">
+                                                Disabled
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-3 whitespace-nowrap">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                type="button"
+                                                onClick={() => openEdit(user)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
+                                                type="button"
+                                                onClick={() => toggleUserActive(user)}
+                                                disabled={isLoading}
+                                            >
+                                                {user.is_active ? 'Disable' : 'Enable'}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {usersPage.data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-sm text-slate-500 dark:text-slate-400">
+                                        {isLoading ? 'Loading...' : 'No users found.'}
+                                    </td>
+                                </tr>
+                            ) : null}
+                        </tbody>
+                    </table>
+                </div>
 
-            <div style={{ padding: '0 18px 18px' }}>
-                <Pagination meta={usersPage.meta} onPageChange={(next) => setPage(next)} />
-            </div>
+                <div className="px-6 pb-5">
+                    <Pagination meta={usersPage.meta} onPageChange={(next) => setPage(next)} />
+                </div>
+            </section>
 
             <Modal
-                title="Add User"
+                title="Add user"
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
                 footer={(
                     <>
-                        <button className="cartel-btn" type="button" onClick={() => setIsCreateOpen(false)}>Cancel</button>
-                        <button className="cartel-btn cartel-btn-strong" type="submit" form="user-create-form">Create</button>
+                        <button
+                            className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            type="button"
+                            onClick={() => setIsCreateOpen(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
+                            type="submit"
+                            form="user-create-form"
+                        >
+                            Create
+                        </button>
                     </>
                 )}
             >
-                <form id="user-create-form" className="grid gap-3 md:grid-cols-2" onSubmit={createUser}>
-                    <input className="input md:col-span-2" placeholder="Full name" required value={createForm.name} onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))} />
-                    <input className="input md:col-span-2" placeholder="Email" type="email" required value={createForm.email} onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))} />
-                    <input className="input md:col-span-2" placeholder="Password (min 10 chars)" type="password" required value={createForm.password} onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))} />
-                    <input className="input" placeholder="Timezone" value={createForm.timezone} onChange={(e) => setCreateForm((p) => ({ ...p, timezone: e.target.value }))} />
-                    <input className="input" placeholder="Telegram chat id (optional)" value={createForm.telegram_chat_id} onChange={(e) => setCreateForm((p) => ({ ...p, telegram_chat_id: e.target.value }))} />
+                <form id="user-create-form" className="grid gap-4 md:grid-cols-2" onSubmit={createUser}>
+                    <Field label="Full name" required className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            required
+                            value={createForm.name}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, name: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Email" required className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            type="email"
+                            required
+                            value={createForm.email}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Password (min 10 chars)" required className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            type="password"
+                            required
+                            value={createForm.password}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Timezone">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={createForm.timezone}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, timezone: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Telegram chat id (optional)">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={createForm.telegram_chat_id}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
+                        />
+                    </Field>
 
                     <div className="md:col-span-2">
-                        <div className="text-sm font-bold mb-2" style={{ color: 'var(--text-main)' }}>Roles</div>
-                        <div className="role-action-wrap">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Roles</div>
+                        <div className="flex flex-wrap gap-2">
                             {roles.map((role) => (
                                 <button
                                     key={`create-${role.slug}`}
                                     type="button"
-                                    className={clsx('role-btn', createForm.roles.includes(role.slug) && 'role-btn-active')}
+                                    className={clsx(
+                                        'rounded-full border px-3 py-2 text-sm transition-colors',
+                                        createForm.roles.includes(role.slug)
+                                            ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200'
+                                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+                                    )}
                                     onClick={() => toggleRole(role.slug, setCreateForm)}
                                 >
                                     {role.slug}
@@ -328,39 +407,94 @@ export default function UserManagementPanel({ setError }) {
                         </div>
                     </div>
 
-                    <label className="toggle-line md:col-span-2">
-                        <input type="checkbox" checked={createForm.is_active} onChange={(e) => setCreateForm((p) => ({ ...p, is_active: e.target.checked }))} />
+                    <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <input
+                            type="checkbox"
+                            checked={createForm.is_active}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, is_active: e.target.checked }))}
+                        />
                         Active
                     </label>
                 </form>
             </Modal>
 
             <Modal
-                title={editingUser ? `Edit User: ${editingUser.email}` : 'Edit User'}
+                title={editingUser ? `Edit user: ${editingUser.email}` : 'Edit user'}
                 isOpen={!!editingUser}
                 onClose={() => setEditingUser(null)}
                 footer={(
                     <>
-                        <button className="cartel-btn" type="button" onClick={() => setEditingUser(null)}>Cancel</button>
-                        <button className="cartel-btn cartel-btn-strong" type="submit" form="user-edit-form">Save</button>
+                        <button
+                            className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                            type="button"
+                            onClick={() => setEditingUser(null)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
+                            type="submit"
+                            form="user-edit-form"
+                        >
+                            Save
+                        </button>
                     </>
                 )}
             >
-                <form id="user-edit-form" className="grid gap-3 md:grid-cols-2" onSubmit={updateUser}>
-                    <input className="input md:col-span-2" placeholder="Full name" required value={editForm.name} onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))} />
-                    <input className="input md:col-span-2" placeholder="Email" type="email" required value={editForm.email} onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))} />
-                    <input className="input md:col-span-2" placeholder="Reset password (optional)" type="password" value={editForm.password} onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))} />
-                    <input className="input" placeholder="Timezone" value={editForm.timezone} onChange={(e) => setEditForm((p) => ({ ...p, timezone: e.target.value }))} />
-                    <input className="input" placeholder="Telegram chat id (optional)" value={editForm.telegram_chat_id} onChange={(e) => setEditForm((p) => ({ ...p, telegram_chat_id: e.target.value }))} />
+                <form id="user-edit-form" className="grid gap-4 md:grid-cols-2" onSubmit={updateUser}>
+                    <Field label="Full name" required className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            required
+                            value={editForm.name}
+                            onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Email" required className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            type="email"
+                            required
+                            value={editForm.email}
+                            onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Reset password (optional)" className="md:col-span-2">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            type="password"
+                            value={editForm.password}
+                            onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Timezone">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={editForm.timezone}
+                            onChange={(e) => setEditForm((p) => ({ ...p, timezone: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Telegram chat id (optional)">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={editForm.telegram_chat_id}
+                            onChange={(e) => setEditForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
+                        />
+                    </Field>
 
                     <div className="md:col-span-2">
-                        <div className="text-sm font-bold mb-2" style={{ color: 'var(--text-main)' }}>Roles</div>
-                        <div className="role-action-wrap">
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Roles</div>
+                        <div className="flex flex-wrap gap-2">
                             {roles.map((role) => (
                                 <button
                                     key={`edit-${role.slug}`}
                                     type="button"
-                                    className={clsx('role-btn', editForm.roles.includes(role.slug) && 'role-btn-active')}
+                                    className={clsx(
+                                        'rounded-full border px-3 py-2 text-sm transition-colors',
+                                        editForm.roles.includes(role.slug)
+                                            ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200'
+                                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800',
+                                    )}
                                     onClick={() => toggleRole(role.slug, setEditForm)}
                                 >
                                     {role.slug}
@@ -369,13 +503,28 @@ export default function UserManagementPanel({ setError }) {
                         </div>
                     </div>
 
-                    <label className="toggle-line md:col-span-2">
-                        <input type="checkbox" checked={editForm.is_active} onChange={(e) => setEditForm((p) => ({ ...p, is_active: e.target.checked }))} />
+                    <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <input
+                            type="checkbox"
+                            checked={editForm.is_active}
+                            onChange={(e) => setEditForm((p) => ({ ...p, is_active: e.target.checked }))}
+                        />
                         Active
                     </label>
                 </form>
             </Modal>
-        </section>
+        </div>
+    );
+}
+
+function Field({ label, required, className, children }) {
+    return (
+        <label className={className}>
+            <div className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
+                {label}{required ? ' *' : ''}
+            </div>
+            {children}
+        </label>
     );
 }
 

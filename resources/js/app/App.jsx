@@ -440,7 +440,7 @@ export default function App() {
                                 alt="SARAH"
                             />
                             <div className="min-w-0">
-                                <div className="text-sm font-semibold text-white truncate">SARAH Command Center</div>
+                                <div className="text-sm font-medium text-white truncate">SARAH Command Center</div>
                                 <div className="text-xs text-slate-400 truncate">Smart Automated Response Hub</div>
                             </div>
                         </div>
@@ -462,7 +462,7 @@ export default function App() {
                             ) : null}
 
                             <div className="pt-4">
-                                <div className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Ops</div>
+                                <div className="px-2 text-xs font-medium uppercase tracking-widest text-slate-500">Ops</div>
                                 <div className="mt-2 space-y-1">
                                     {canViewHelpdesk || canCreateHelpdesk ? (
                                         <button type="button" className={clsx(navItemClass('helpdesk'), 'group')} onClick={() => navigateMenu('helpdesk')}>
@@ -486,7 +486,7 @@ export default function App() {
                             </div>
 
                             <div className="pt-4">
-                                <div className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Admin</div>
+                                <div className="px-2 text-xs font-medium uppercase tracking-widest text-slate-500">Admin</div>
                                 <div className="mt-2 space-y-1">
                                     {canManageUsers ? (
                                         <button type="button" className={clsx(navItemClass('users'), 'group')} onClick={() => navigateMenu('users')}>
@@ -516,11 +516,11 @@ export default function App() {
 
                         <div className="mt-auto pt-4 border-t border-white/10">
                             <div className="flex items-center gap-3 px-2">
-                                <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white font-semibold">
+                                <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 text-white font-medium">
                                     {(profile?.name || 'U').slice(0, 1).toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="text-sm font-semibold text-white truncate">{profile?.name}</div>
+                                    <div className="text-sm font-medium text-white truncate">{profile?.name}</div>
                                     <div className="text-xs text-slate-400 truncate">{(profile?.roles || []).join(', ') || 'user'}</div>
                                 </div>
                             </div>
@@ -545,7 +545,7 @@ export default function App() {
                                     <div className="text-sm text-slate-500 dark:text-slate-400">
                                         Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
                                     </div>
-                                    <div className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                    <div className="text-lg font-medium text-slate-900 dark:text-slate-100 truncate">
                                         {profile?.name?.split(' ')[0] || 'Operator'}!
                                     </div>
                                 </div>
