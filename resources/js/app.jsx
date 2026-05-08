@@ -110,6 +110,7 @@ function App() {
         attachment_url: '',
         status: '',
     });
+    const [searchQuery, setSearchQuery] = useState('');
 
     const sensors = useSensors(useSensor(PointerSensor));
 
@@ -485,40 +486,37 @@ function App() {
         );
     }
 
+    const navItems = [
+        { key: 'dashboard', label: 'Dashboard' },
+        { key: 'tickets', label: 'Tickets' },
+        { key: 'helpdesk', label: 'Helpdesk', permission: 'helpdesk.report.view' },
+        { key: 'eos', label: 'EOS', permission: 'eos.update.create' },
+        { key: 'integrations', label: 'Integrations' },
+        { key: 'reports', label: 'Reports', permission: 'reports.view' },
+        { key: 'notifications', label: 'Notifications', permission: 'notifications.view' },
+        { key: 'users', label: 'Users', permission: 'users.manage' },
+        { key: 'audit', label: 'Audit', permission: 'audit.view' },
+    ];
+
     return (
-        <div className="phoenix-shell">
-            <aside className="phoenix-sidebar">
-                <div className="sidebar-logo">
-                    {theme === 'light' ? (
-                        <img
-                            src="/Unique Command Center Logo for SARAH.png"
-                            alt="SARAH Command Center"
-                            className="sidebar-logo-image"
-                        />
-                    ) : (
-                        <>
-                            <span className="logo-flame">◆</span>
-                            <span className="logo-text">SARAH</span>
-                        </>
-                    )}
+        <div className="parsinta-shell">
+            <header className="parsinta-nav">
+                <div className="nav-left">
+                    <img
+                        src="/Unique Command Center Logo for SARAH.png"
+                        alt="SARAH Command Center"
+                        className="nav-logo"
+                    />
                 </div>
 
-                <nav className="sidebar-section">
-                    <p className="sidebar-label">OVERVIEW</p>
-                    <button type="button" className={clsx('sidebar-item', menu === 'dashboard' && 'sidebar-item-active')} onClick={() => setMenu('dashboard')}>
-                        Operational Dashboard
-                    </button>
-                </nav>
-
-                <nav className="sidebar-section">
-                    <p className="sidebar-label">APPS</p>
-                    {secondarySidebarItems
+                <nav className="nav-center">
+                    {navItems
                         .filter((item) => !item.permission || hasPermission(profile, item.permission))
                         .map((item) => (
                             <button
                                 key={item.key}
                                 type="button"
-                                className={clsx('sidebar-item', menu === item.key && 'sidebar-item-active')}
+                                className={clsx('nav-link', menu === item.key && 'nav-link-active')}
                                 onClick={() => setMenu(item.key)}
                             >
                                 {item.label}
@@ -526,93 +524,93 @@ function App() {
                         ))}
                 </nav>
 
-                <div className="sidebar-profile">
-                    <div className="avatar-circle">{(profile?.name || 'U').slice(0, 1).toUpperCase()}</div>
-                    <div>
-                        <div className="profile-name">{profile?.name}</div>
-                        <div className="profile-role">{(profile?.roles || []).join(', ') || 'user'}</div>
+                <div className="nav-right">
+                    <label className="nav-search">
+                        <span className="nav-search-icon">⌕</span>
+                        <input
+                            className="nav-search-input"
+                            placeholder="Search ticket code, node, user..."
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                        />
+                    </label>
+                    <button className="nav-btn" onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} type="button">
+                        {theme === 'light' ? 'Dark' : 'Light'}
+                    </button>
+                    <button className="nav-btn" type="button" onClick={refreshBase}>Refresh</button>
+                    <button className="nav-btn nav-btn-strong" type="button" onClick={logout}>Logout</button>
+                    <div className="nav-avatar" title={profile?.name || 'User'}>
+                        {(profile?.name || 'U').slice(0, 1).toUpperCase()}
                     </div>
                 </div>
-            </aside>
+            </header>
 
-            <section className="phoenix-main">
-                <header className="phoenix-topbar">
-                    <div className="topbar-search">Search ticket code, node, user...</div>
-                    <div className="topbar-actions">
-                        <button className="icon-btn icon-btn-wide" onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} type="button">
-                            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                        </button>
-                        <button className="icon-btn icon-btn-wide" type="button" onClick={refreshBase}>Refresh</button>
-                        <button className="icon-btn icon-btn-wide" type="button" onClick={logout}>Logout</button>
-                    </div>
-                </header>
+            <main className="parsinta-content">
+                {error ? <div className="error-banner">{error}</div> : null}
 
-                <main className="phoenix-content">
-                    {error ? <div className="error-banner">{error}</div> : null}
+                {menu === 'dashboard' ? (
+                    <DashboardView
+                        board={board}
+                        boardCounts={boardCounts}
+                        stats={stats}
+                        responseCompliance={responseCompliance}
+                        setMenu={setMenu}
+                    />
+                ) : null}
 
-                    {menu === 'dashboard' ? (
-                        <DashboardView
-                            board={board}
-                            boardCounts={boardCounts}
-                            stats={stats}
-                            responseCompliance={responseCompliance}
-                            setMenu={setMenu}
-                        />
-                    ) : null}
+                {menu === 'tickets' ? (
+                    <TicketBoardView
+                        board={board}
+                        searchQuery={searchQuery}
+                        canUpdateTicket={canUpdateTicket}
+                        onDragEnd={onDragEnd}
+                        sensors={sensors}
+                        updateStatus={updateStatus}
+                    />
+                ) : null}
 
-                    {menu === 'tickets' ? (
-                        <TicketBoardView
-                            board={board}
-                            canUpdateTicket={canUpdateTicket}
-                            onDragEnd={onDragEnd}
-                            sensors={sensors}
-                            updateStatus={updateStatus}
-                        />
-                    ) : null}
+                {menu === 'integrations' ? <IntegrationPanel integrations={integrations} /> : null}
 
-                    {menu === 'integrations' ? <IntegrationPanel integrations={integrations} /> : null}
+                {menu === 'helpdesk' && (canViewHelpdesk || canCreateHelpdesk) ? (
+                    <HelpdeskPanel
+                        canCreateHelpdesk={canCreateHelpdesk}
+                        helpdeskReports={helpdeskReports}
+                        newHelpdeskReport={newHelpdeskReport}
+                        setNewHelpdeskReport={setNewHelpdeskReport}
+                        createHelpdeskReport={createHelpdeskReport}
+                    />
+                ) : null}
 
-                    {menu === 'helpdesk' && (canViewHelpdesk || canCreateHelpdesk) ? (
-                        <HelpdeskPanel
-                            canCreateHelpdesk={canCreateHelpdesk}
-                            helpdeskReports={helpdeskReports}
-                            newHelpdeskReport={newHelpdeskReport}
-                            setNewHelpdeskReport={setNewHelpdeskReport}
-                            createHelpdeskReport={createHelpdeskReport}
-                        />
-                    ) : null}
+                {menu === 'eos' && canCreateEos ? (
+                    <EosPanel
+                        board={board}
+                        selectedEosTicket={selectedEosTicket}
+                        onSelectEosTicket={onSelectEosTicket}
+                        newEosUpdate={newEosUpdate}
+                        setNewEosUpdate={setNewEosUpdate}
+                        createEosUpdate={createEosUpdate}
+                        eosTicketUpdates={eosTicketUpdates}
+                    />
+                ) : null}
 
-                    {menu === 'eos' && canCreateEos ? (
-                        <EosPanel
-                            board={board}
-                            selectedEosTicket={selectedEosTicket}
-                            onSelectEosTicket={onSelectEosTicket}
-                            newEosUpdate={newEosUpdate}
-                            setNewEosUpdate={setNewEosUpdate}
-                            createEosUpdate={createEosUpdate}
-                            eosTicketUpdates={eosTicketUpdates}
-                        />
-                    ) : null}
+                {menu === 'reports' && canViewReports ? <OperationsReportPanel opsReport={opsReport} /> : null}
 
-                    {menu === 'reports' && canViewReports ? <OperationsReportPanel opsReport={opsReport} /> : null}
+                {menu === 'notifications' && canViewNotifications ? <NotificationPanel logs={notificationLogs} /> : null}
 
-                    {menu === 'notifications' && canViewNotifications ? <NotificationPanel logs={notificationLogs} /> : null}
+                {menu === 'users' && canManageUsers ? (
+                    <UserManagementPanel
+                        users={users}
+                        roles={roles}
+                        newUser={newUser}
+                        setNewUser={setNewUser}
+                        createUser={createUser}
+                        toggleUserActive={toggleUserActive}
+                        setUserRole={setUserRole}
+                    />
+                ) : null}
 
-                    {menu === 'users' && canManageUsers ? (
-                        <UserManagementPanel
-                            users={users}
-                            roles={roles}
-                            newUser={newUser}
-                            setNewUser={setNewUser}
-                            createUser={createUser}
-                            toggleUserActive={toggleUserActive}
-                            setUserRole={setUserRole}
-                        />
-                    ) : null}
-
-                    {menu === 'audit' && canViewAudit ? <AuditPanel logs={auditLogs} /> : null}
-                </main>
-            </section>
+                {menu === 'audit' && canViewAudit ? <AuditPanel logs={auditLogs} /> : null}
+            </main>
         </div>
     );
 }
@@ -682,7 +680,18 @@ function DashboardView({ board, boardCounts, stats, responseCompliance, setMenu 
     );
 }
 
-function TicketBoardView({ board, canUpdateTicket, onDragEnd, sensors, updateStatus }) {
+function TicketBoardView({ board, searchQuery, canUpdateTicket, onDragEnd, sensors, updateStatus }) {
+    const q = (searchQuery || '').trim().toLowerCase();
+    const filterItems = (items) => {
+        if (!q) {
+            return items;
+        }
+        return items.filter((ticket) => {
+            const hay = `${ticket.ticket_code} ${ticket.title} ${ticket.node_name || ''}`.toLowerCase();
+            return hay.includes(q);
+        });
+    };
+
     return (
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
             <section className="ticket-board">
@@ -691,7 +700,7 @@ function TicketBoardView({ board, canUpdateTicket, onDragEnd, sensors, updateSta
                         key={status}
                         id={status}
                         title={statusLabels[status]}
-                        items={board.columns?.[status] || []}
+                        items={filterItems(board.columns?.[status] || [])}
                         canUpdate={canUpdateTicket}
                         onQuickStatus={updateStatus}
                     />
