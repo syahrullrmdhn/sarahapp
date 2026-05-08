@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -46,9 +46,10 @@
 
     body {
         margin: 0;
-        font-family: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+        font-family: 'Albert Sans', ui-sans-serif, system-ui, sans-serif;
         background: var(--app-bg);
         color: var(--text-main);
+        font-feature-settings: 'ss01' on, 'cv03' on;
     }
 }
 
@@ -124,10 +125,10 @@
     }
 
     .logo-text {
-        @apply text-3xl font-extrabold;
+        @apply text-3xl font-bold;
         line-height: 1;
-        letter-spacing: -0.02em;
-        color: #9fb0c8;
+        letter-spacing: 0.02em;
+        color: #b5c3da;
     }
 
     .sidebar-section {
@@ -198,10 +199,14 @@
     }
 
     .icon-btn {
-        @apply grid size-10 place-items-center rounded-full border text-sm font-bold transition;
+        @apply grid h-10 min-w-10 place-items-center rounded-full border px-3 text-sm font-semibold transition;
         border-color: var(--panel-border);
         background: var(--panel-soft);
         color: #687190;
+    }
+
+    .icon-btn-wide {
+        @apply rounded-xl;
     }
 
     .icon-btn:hover {

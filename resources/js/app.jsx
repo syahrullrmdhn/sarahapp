@@ -446,7 +446,7 @@ function App() {
                     <div className="brand-row">
                         <div className="brand-icon">S</div>
                         <div>
-                            <h1 className="auth-title">SARAH Phoenix</h1>
+                            <h1 className="auth-title">SARAH Command Center</h1>
                             <p className="auth-subtitle">Smart Automated Response & Alerting Hub</p>
                         </div>
                     </div>
@@ -497,16 +497,16 @@ function App() {
                         />
                     ) : (
                         <>
-                            <span className="logo-flame">✦</span>
-                            <span className="logo-text">sarah</span>
+                            <span className="logo-flame">◆</span>
+                            <span className="logo-text">SARAH</span>
                         </>
                     )}
                 </div>
 
                 <nav className="sidebar-section">
-                    <p className="sidebar-label">HOME</p>
+                    <p className="sidebar-label">OVERVIEW</p>
                     <button type="button" className={clsx('sidebar-item', menu === 'dashboard' && 'sidebar-item-active')} onClick={() => setMenu('dashboard')}>
-                        Ecommerce
+                        Operational Dashboard
                     </button>
                 </nav>
 
@@ -537,13 +537,13 @@ function App() {
 
             <section className="phoenix-main">
                 <header className="phoenix-topbar">
-                    <div className="topbar-search">Search incidents, users, node...</div>
+                    <div className="topbar-search">Search ticket code, node, user...</div>
                     <div className="topbar-actions">
-                        <button className="icon-btn" onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} type="button">
-                            {theme === 'light' ? '☾' : '☀'}
+                        <button className="icon-btn icon-btn-wide" onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))} type="button">
+                            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
                         </button>
-                        <button className="icon-btn" type="button">⎋</button>
-                        <button className="icon-btn" type="button" onClick={logout}>↦</button>
+                        <button className="icon-btn icon-btn-wide" type="button" onClick={refreshBase}>Refresh</button>
+                        <button className="icon-btn icon-btn-wide" type="button" onClick={logout}>Logout</button>
                     </div>
                 </header>
 
