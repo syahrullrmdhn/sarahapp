@@ -8,7 +8,6 @@ import Pagination from '../ui/Pagination';
 const emptyCreate = {
     name: '',
     email: '',
-    password: '',
     timezone: 'Asia/Jakarta',
     telegram_chat_id: '',
     is_active: true,
@@ -18,7 +17,6 @@ const emptyCreate = {
 const emptyEdit = {
     name: '',
     email: '',
-    password: '',
     timezone: 'Asia/Jakarta',
     telegram_chat_id: '',
     is_active: true,
@@ -105,7 +103,7 @@ export default function UserManagementPanel({ setError }) {
             loadUsers({ page: 1, q });
         }, 250);
 
-        return () => window.clearTimeout(timer);
+return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [q, perPage]);
 
@@ -123,17 +121,16 @@ export default function UserManagementPanel({ setError }) {
     };
 
     const openCreate = () => {
-        setCreateForm({ ...emptyCreate, timezone: 'Asia/Jakarta' });
+        setCreateForm({ ...emptyCreate, timezone: 'Asia' });
         setIsCreateOpen(true);
     };
 
-    const createUser = async (event) => {
+    const inviteUser = async (event) => {
         event.preventDefault();
         try {
-            await api.post('/admin/users', {
+            await api.post('/admin/users/invite', {
                 name: createForm.name,
                 email: createForm.email,
-                password: createForm.password,
                 timezone: createForm.timezone,
                 telegram_chat_id: (createForm.telegram_chat_id || '').trim() || null,
                 is_active: !!createForm.is_active,
@@ -142,8 +139,9 @@ export default function UserManagementPanel({ setError }) {
             setIsCreateOpen(false);
             setCreateForm({ ...emptyCreate });
             await loadUsers({ page: 1 });
+            setError?.('Invitation sent successfully');
         } catch (e) {
-            setError?.(e?.response?.data?.message || 'Failed to create user');
+            setError?.(e?.response?.data?.message || 'Failed to send invitation');
         }
     };
 
@@ -152,7 +150,6 @@ export default function UserManagementPanel({ setError }) {
         setEditForm({
             name: user.name || '',
             email: user.email || '',
-            password: '',
             timezone: user.timezone || 'Asia/Jakarta',
             telegram_chat_id: user.telegram_chat_id || '',
             is_active: !!user.is_active,
@@ -176,15 +173,21 @@ export default function UserManagementPanel({ setError }) {
                 roles: editForm.roles,
             };
 
-            if ((editForm.password || '').trim() !== '') {
-                payload.password = editForm.password;
-            }
-
             await api.patch(`/admin/users/${editingUser.id}`, payload);
             setEditingUser(null);
             await loadUsers({ page });
+            setError?.('User updated successfully');
         } catch (e) {
             setError?.(e?.response?.data?.message || 'Failed to update user');
+        }
+    };
+
+    const resendInvitation = async (user) => {
+        try {
+            await api.post(`/admin/users/${user.id}/resend-invitation`);
+            setError?.('Invitation resent successfully');
+        } catch (e) {
+            setError?.(e?.response?.data?.message || 'Failed to resend invitation');
         }
     };
 
@@ -238,7 +241,7 @@ export default function UserManagementPanel({ setError }) {
                         type="button"
                         onClick={openCreate}
                     >
-                        Add user
+                        Invite user
                     </button>
                 </div>
 
@@ -294,6 +297,13 @@ export default function UserManagementPanel({ setError }) {
                                                 Edit
                                             </button>
                                             <button
+                                                className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                                type="button"
+                                                onClick={() => resendInvitation(user)}
+                                            >
+                                                Resend
+                                            </button>
+                                            <button
                                                 className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:opacity-50"
                                                 type="button"
                                                 onClick={() => toggleUserActive(user)}
@@ -322,7 +332,7 @@ export default function UserManagementPanel({ setError }) {
             </section>
 
             <Modal
-                title="Add user"
+                title="Invite user"
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
                 footer={(
@@ -337,14 +347,14 @@ export default function UserManagementPanel({ setError }) {
                         <button
                             className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]"
                             type="submit"
-                            form="user-create-form"
+                            form="user-invite-form"
                         >
-                            Create
+                            Send invitation
                         </button>
                     </>
                 )}
             >
-                <form id="user-create-form" className="grid gap-4 md:grid-cols-2" onSubmit={createUser}>
+                <form id="user-invite-form" className="grid gap-4 md:grid-cols-2" onSubmit={inviteUser}>
                     <Field label="Full name" required className="md:col-span-2">
                         <input
                             className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
@@ -360,29 +370,6 @@ export default function UserManagementPanel({ setError }) {
                             required
                             value={createForm.email}
                             onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Password (min 10 chars)" required className="md:col-span-2">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            type="password"
-                            required
-                            value={createForm.password}
-                            onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Timezone">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            value={createForm.timezone}
-                            onChange={(e) => setCreateForm((p) => ({ ...p, timezone: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Telegram chat id (optional)">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            value={createForm.telegram_chat_id}
-                            onChange={(e) => setCreateForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
                         />
                     </Field>
 
@@ -407,14 +394,34 @@ export default function UserManagementPanel({ setError }) {
                         </div>
                     </div>
 
-                    <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                    <Field label="Timezone">
                         <input
-                            type="checkbox"
-                            checked={createForm.is_active}
-                            onChange={(e) => setCreateForm((p) => ({ ...p, is_active: e.target.checked }))}
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={createForm.timezone}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, timezone: e.target.value }))}
                         />
-                        Active
-                    </label>
+                    </Field>
+                    <Field label="Telegram chat id (optional)">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={createForm.telegram_chat_id}
+                            onChange={(e) => setCreateForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
+                        />
+                    </Field>
+
+                    <div className="md:col-span-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Invitation will be sent</p>
+                                <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                    An email with a secure link will be sent to the user. They can set their own password and complete their registration.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </Modal>
 
@@ -436,7 +443,7 @@ export default function UserManagementPanel({ setError }) {
                             type="submit"
                             form="user-edit-form"
                         >
-                            Save
+                            Save changes
                         </button>
                     </>
                 )}
@@ -457,28 +464,6 @@ export default function UserManagementPanel({ setError }) {
                             required
                             value={editForm.email}
                             onChange={(e) => setEditForm((p) => ({ ...p, email: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Reset password (optional)" className="md:col-span-2">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            type="password"
-                            value={editForm.password}
-                            onChange={(e) => setEditForm((p) => ({ ...p, password: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Timezone">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            value={editForm.timezone}
-                            onChange={(e) => setEditForm((p) => ({ ...p, timezone: e.target.value }))}
-                        />
-                    </Field>
-                    <Field label="Telegram chat id (optional)">
-                        <input
-                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
-                            value={editForm.telegram_chat_id}
-                            onChange={(e) => setEditForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
                         />
                     </Field>
 
@@ -503,6 +488,21 @@ export default function UserManagementPanel({ setError }) {
                         </div>
                     </div>
 
+                    <Field label="Timezone">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={editForm.timezone}
+                            onChange={(e) => setEditForm((p) => ({ ...p, timezone: e.target.value }))}
+                        />
+                    </Field>
+                    <Field label="Telegram chat id (optional)">
+                        <input
+                            className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all"
+                            value={editForm.telegram_chat_id}
+                            onChange={(e) => setEditForm((p) => ({ ...p, telegram_chat_id: e.target.value }))}
+                        />
+                    </Field>
+
                     <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                         <input
                             type="checkbox"
@@ -521,10 +521,9 @@ function Field({ label, required, className, children }) {
     return (
         <label className={className}>
             <div className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">
-                {label}{required ? ' *' : ''}
+                {label}{required ? ' ' : ''}
             </div>
             {children}
         </label>
     );
 }
-

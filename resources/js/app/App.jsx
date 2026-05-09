@@ -1,12 +1,15 @@
 import clsx from 'clsx';
 import React, { useEffect, useMemo, useState } from 'react';
-import { PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { useQuery } from '@tanstack/react-query';
 
 import { columnsOrder } from './constants';
 import { hasPermission } from './utils';
 import { api, clearAuthToken, setAuthToken } from './api';
 
 import Icon from './ui/Icon';
+import LoginPage from './components/LoginPage';
+import Toast from './components/Toast';
 import DashboardView from './views/DashboardView';
 import TicketBoardView from './views/TicketBoardView';
 import IntegrationPanel from './views/IntegrationPanel';
@@ -17,15 +20,44 @@ import NotificationPanel from './views/NotificationPanel';
 import UserManagementPanel from './views/UserManagementPanel';
 import AuditPanel from './views/AuditPanel';
 import NodesPanel from './views/NodesPanel';
+import KnowledgeBasePanel from './views/KnowledgeBasePanel';
 
 export default function App() {
     const [token, setToken] = useState(() => localStorage.getItem('sarah_token') || '');
     const [theme, setTheme] = useState(() => localStorage.getItem('sarah_theme') || 'light');
-    const [menu, setMenu] = useState('dashboard');
+    const [menu, setMenu] = useState(() => {
+        const hash = window.location.hash.replace('#', '');
+        return hash || 'dashboard';
+    });
+
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) setMenu(hash);
+        };
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, []);
+
+    useEffect(() => {
+        if (window.location.hash.replace('#', '') !== menu) {
+            window.location.hash = menu;
+        }
+    }, [menu]);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [credentials, setCredentials] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [notification, setNotification] = useState(null);
+
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+    };
+
+    const onLogin = (token, user) => {
+        localStorage.setItem('sarah_token', token);
+        localStorage.setItem('sarah_user', JSON.stringify(user));
+        setToken(token);
+    };
 
     const [profile, setProfile] = useState(null);
     const [board, setBoard] = useState({ columns: {}, meta: {} });
@@ -57,11 +89,15 @@ export default function App() {
     });
     const [searchQuery, setSearchQuery] = useState('');
 
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+    );
 
     const navigateMenu = (nextMenu) => {
         setMenu(nextMenu);
         setSidebarOpen(false);
+        window.location.hash = nextMenu;
     };
 
     useEffect(() => {
@@ -70,37 +106,65 @@ export default function App() {
     }, [theme]);
 
     useEffect(() => {
-        if (!token) {
-            return;
-        }
-
+        if (!token) return;
         setAuthToken(token);
         localStorage.setItem('sarah_token', token);
-
-        const boot = async () => {
-            await refreshBase();
-        };
-
-        boot();
-
-        const intervalId = window.setInterval(() => {
-            refreshBase();
-        }, 15000);
-
-        return () => window.clearInterval(intervalId);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
+
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            logout();
+        };
+        window.addEventListener('auth:unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    }, []);
+
+    const { data: baseData, error: baseQueryError } = useQuery({
+        queryKey: ['baseData'],
+        queryFn: async () => {
+            const [meRes, boardRes, statsRes, integrationRes] = await Promise.all([
+                api.get('/auth/me'),
+                api.get('/tickets/board'),
+                api.get('/dashboard/stats'),
+                api.get('/integrations'),
+            ]);
+            return {
+                profile: meRes.data,
+                board: boardRes.data,
+                stats: statsRes.data,
+                integrations: integrationRes.data,
+            };
+        },
+        enabled: !!token,
+        refetchInterval: 15000,
+    });
+
+    useEffect(() => {
+        if (baseData) {
+            setProfile(baseData.profile);
+            setBoard(baseData.board);
+            setStats(baseData.stats);
+            setIntegrations(baseData.integrations);
+            setError('');
+        }
+    }, [baseData]);
+
+    useEffect(() => {
+        if (baseQueryError) {
+            setError(baseQueryError?.response?.data?.message || 'Failed to fetch dashboard data');
+        }
+    }, [baseQueryError]);
 
     useEffect(() => {
         if (!token || !profile) {
             return;
         }
-
         refreshContextual(menu);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [menu, token, profile?.id]);
 
     const refreshBase = async () => {
+        // Now handled by React Query, this is kept for manual refresh triggers
         try {
             const [meRes, boardRes, statsRes, integrationRes] = await Promise.all([
                 api.get('/auth/me'),
@@ -108,21 +172,13 @@ export default function App() {
                 api.get('/dashboard/stats'),
                 api.get('/integrations'),
             ]);
-
-            const nextProfile = meRes.data;
-            setProfile(nextProfile);
+            setProfile(meRes.data);
             setBoard(boardRes.data);
             setStats(statsRes.data);
             setIntegrations(integrationRes.data);
             setError('');
-
-            await refreshContextual(menu, nextProfile);
+            await refreshContextual(menu, meRes.data);
         } catch (e) {
-            if (e?.response?.status === 401) {
-                logout();
-                return;
-            }
-
             setError(e?.response?.data?.message || 'Failed to fetch dashboard data');
         }
     };
@@ -166,27 +222,6 @@ export default function App() {
         }
     };
 
-    const login = async (event) => {
-        event.preventDefault();
-        setIsLoading(true);
-
-        try {
-            const response = await api.post('/auth/login', {
-                email: credentials.email,
-                password: credentials.password,
-                device_name: 'sarah-phoenix-ui',
-            });
-
-            setToken(response.data.token);
-            setCredentials({ email: '', password: '' });
-            setError('');
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Login failed');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const logout = async () => {
         try {
             if (token) {
@@ -223,6 +258,8 @@ export default function App() {
     const canViewNotifications = useMemo(() => hasPermission(profile, 'notifications.view'), [profile]);
     const canManageNodes = useMemo(() => hasPermission(profile, 'nodes.manage'), [profile]);
     const canManageIntegrations = useMemo(() => hasPermission(profile, 'integrations.manage'), [profile]);
+    const canViewKnowledgeBase = useMemo(() => hasPermission(profile, 'knowledge-view'), [profile]);
+    const canCreateKnowledgeBase = useMemo(() => hasPermission(profile, 'knowledge-create'), [profile]);
 
     const updateStatus = async (ticketId, status) => {
         if (!canUpdateTicket) {
@@ -232,8 +269,11 @@ export default function App() {
         try {
             await api.patch(`/tickets/${ticketId}/status`, { status });
             await refreshBase();
+            const statusLabels = { new: 'New', acknowledged: 'Acknowledged', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
+            showNotification(`Ticket status updated to ${statusLabels[status] || status}`, 'success');
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to update ticket status');
+            showNotification(e?.response?.data?.message || 'Failed to update ticket status', 'error');
         }
     };
 
@@ -241,6 +281,7 @@ export default function App() {
         try {
             await api.post('/tickets', payload);
             await refreshBase();
+            showNotification('Ticket created successfully', 'success');
             return true;
         } catch (e) {
             setError(e?.response?.data?.message || 'Failed to create ticket');
@@ -360,49 +401,13 @@ export default function App() {
 
     if (!token) {
         return (
-            <main className="auth-wrap">
-                <div className="auth-panel">
-                    <div className="brand-row">
-                        <div className="brand-icon">S</div>
-                        <div>
-                            <h1 className="auth-title">SARAH Command Center</h1>
-                            <p className="auth-subtitle">Smart Automated Response & Alerting Hub</p>
-                        </div>
-                    </div>
-
-                    <form className="space-y-3" onSubmit={login}>
-                        <input
-                            className="input"
-                            type="email"
-                            required
-                            placeholder="Email"
-                            value={credentials.email}
-                            onChange={(event) => setCredentials((prev) => ({ ...prev, email: event.target.value }))}
-                        />
-                        <input
-                            className="input"
-                            type="password"
-                            required
-                            placeholder="Password"
-                            value={credentials.password}
-                            onChange={(event) => setCredentials((prev) => ({ ...prev, password: event.target.value }))}
-                        />
-                        <button className="btn-primary w-full" type="submit" disabled={isLoading}>
-                            {isLoading ? 'Signing in...' : 'Sign In'}
-                        </button>
-                    </form>
-
-                    {import.meta.env?.DEV ? (
-                        <div className="dev-cred-box">
-                            <div className="dev-cred-title">Super Admin (Dev)</div>
-                            <div>superadmin@sarah.local</div>
-                            <div>S4rahSecure!2026</div>
-                        </div>
-                    ) : null}
-
-                    {error ? <p className="auth-error">{error}</p> : null}
-                </div>
-            </main>
+            <LoginPage
+                onLogin={onLogin}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                error={error}
+                setError={setError}
+            />
         );
     }
 
@@ -417,7 +422,7 @@ export default function App() {
     const iconBtnClass = 'inline-flex items-center justify-center rounded-full p-2 text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-800';
 
     return (
-        <div className="min-h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="flex h-screen w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
             <button
                 type="button"
                 className={clsx('fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-sm lg:hidden', sidebarOpen ? 'block' : 'hidden')}
@@ -425,14 +430,13 @@ export default function App() {
                 aria-label="Close navigation"
             />
 
-            <div className="lg:grid lg:grid-cols-[280px,1fr]">
-                <aside
-                    className={clsx(
-                        'fixed inset-y-0 left-0 z-40 w-72 -translate-x-full transform transition-transform duration-200 ease-out lg:static lg:translate-x-0 lg:w-[280px]',
-                        sidebarOpen && 'translate-x-0',
-                    )}
-                >
-                    <div className="flex h-full flex-col bg-slate-900 px-4 py-5 text-slate-400">
+            <aside
+                className={clsx(
+                    'fixed inset-y-0 left-0 z-40 w-72 -translate-x-full transform transition-transform duration-200 ease-out lg:static lg:translate-x-0 lg:w-[280px] flex-shrink-0',
+                    sidebarOpen && 'translate-x-0',
+                )}
+            >
+                <div className="flex h-full flex-col bg-slate-900 px-4 py-5 text-slate-400 overflow-y-auto">
                         <div className="flex items-center gap-3 px-2 pb-4 border-b border-white/10">
                             <img
                                 className="h-8 w-auto object-contain"
@@ -482,6 +486,12 @@ export default function App() {
                                             Notifications
                                         </button>
                                     ) : null}
+                                    {canViewKnowledgeBase ? (
+                                        <button type="button" className={clsx(navItemClass('knowledge'), 'group')} onClick={() => navigateMenu('knowledge')}>
+                                            <span className={navIconClass('knowledge')} aria-hidden="true"><Icon name="knowledge" /></span>
+                                            Knowledge Base
+                                        </button>
+                                    ) : null}
                                 </div>
                             </div>
 
@@ -528,63 +538,63 @@ export default function App() {
                     </div>
                 </aside>
 
-                <section className="min-w-0">
-                    <header className="sticky top-0 z-30 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-                        <div className="flex items-center justify-between gap-4 px-4 py-4 lg:px-6">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <button
-                                    className={clsx(iconBtnClass, 'lg:hidden')}
-                                    type="button"
-                                    onClick={() => setSidebarOpen(true)}
-                                    aria-label="Open navigation"
-                                >
-                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="menu" /></span>
-                                </button>
+            <section className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+                <header className="flex-shrink-0 z-30 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center justify-between gap-4 px-4 py-4 lg:px-6">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <button
+                                className={clsx(iconBtnClass, 'lg:hidden')}
+                                type="button"
+                                onClick={() => setSidebarOpen(true)}
+                                aria-label="Open navigation"
+                            >
+                                <span className="h-5 w-5" aria-hidden="true"><Icon name="menu" /></span>
+                            </button>
 
-                                <div className="min-w-0">
-                                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                                        Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
-                                    </div>
-                                    <div className="text-lg font-medium text-slate-900 dark:text-slate-100 truncate">
-                                        {profile?.name?.split(' ')[0] || 'Operator'}!
-                                    </div>
+                            <div className="min-w-0">
+                                <div className="text-sm text-slate-500 dark:text-slate-400">
+                                    Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'},
+                                </div>
+                                <div className="text-lg font-medium text-slate-900 dark:text-slate-100 truncate">
+                                    {profile?.name?.split(' ')[0] || 'Operator'}!
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                                <label
-                                    className="hidden md:flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600 border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:ring-2 focus-within:ring-slate-100 transition-all dark:bg-slate-900 dark:text-slate-300 dark:focus-within:bg-slate-900 dark:focus-within:border-slate-700 dark:focus-within:ring-slate-800"
-                                    style={{ width: 340 }}
-                                >
-                                    <span className="h-4 w-4 text-slate-400" aria-hidden="true"><Icon name="search" /></span>
-                                    <input
-                                        className="w-full bg-transparent outline-none placeholder:text-slate-400"
-                                        placeholder="Search tickets, nodes, users"
-                                        value={searchQuery}
-                                        onChange={(event) => setSearchQuery(event.target.value)}
-                                    />
-                                </label>
-
-                                <button className={iconBtnClass} type="button" onClick={refreshBase} aria-label="Refresh">
-                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="refresh" /></span>
-                                </button>
-                                <button
-                                    className={iconBtnClass}
-                                    type="button"
-                                    onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
-                                    aria-label="Toggle theme"
-                                >
-                                    <span className="h-5 w-5" aria-hidden="true"><Icon name={theme === 'light' ? 'moon' : 'sun'} /></span>
-                                </button>
-                                <button className={iconBtnClass} type="button" onClick={logout} aria-label="Logout">
-                                    <span className="h-5 w-5" aria-hidden="true"><Icon name="logout" /></span>
-                                </button>
-                            </div>
                         </div>
-                    </header>
 
-                    <main className="px-4 py-6 lg:px-6">
-                        {error ? (
+                        <div className="flex items-center gap-2">
+                            <label
+                                className="hidden md:flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-600 border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:ring-2 focus-within:ring-slate-100 transition-all dark:bg-slate-900 dark:text-slate-300 dark:focus-within:bg-slate-900 dark:focus-within:border-slate-700 dark:focus-within:ring-slate-800"
+                                style={{ width: 340 }}
+                            >
+                                <span className="h-4 w-4 text-slate-400" aria-hidden="true"><Icon name="search" /></span>
+                                <input
+                                    className="w-full bg-transparent outline-none placeholder:text-slate-400"
+                                    placeholder="Search tickets, nodes, users"
+                                    value={searchQuery}
+                                    onChange={(event) => setSearchQuery(event.target.value)}
+                                />
+                            </label>
+
+                            <button className={iconBtnClass} type="button" onClick={refreshBase} aria-label="Refresh">
+                                <span className="h-5 w-5" aria-hidden="true"><Icon name="refresh" /></span>
+                            </button>
+                            <button
+                                className={iconBtnClass}
+                                type="button"
+                                onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+                                aria-label="Toggle theme"
+                            >
+                                <span className="h-5 w-5" aria-hidden="true"><Icon name={theme === 'light' ? 'moon' : 'sun'} /></span>
+                            </button>
+                            <button className={iconBtnClass} type="button" onClick={logout} aria-label="Logout">
+                                <span className="h-5 w-5" aria-hidden="true"><Icon name="logout" /></span>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 overflow-y-auto px-4 py-6 lg:px-6">
+                    {error ? (
                             <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-500/40 dark:bg-red-950/30 dark:text-red-200">
                                 {error}
                             </div>
@@ -661,9 +671,21 @@ export default function App() {
                             setError={setError}
                         />
                     ) : null}
+
+                    {menu === 'knowledge' && canViewKnowledgeBase ? (
+                        <KnowledgeBasePanel
+                            setError={setError}
+                        />
+                    ) : null}
                     </main>
-                </section>
-            </div>
+            </section>
+            {notification && (
+                <Toast
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={() => setNotification(null)}
+                />
+            )}
         </div>
     );
 }

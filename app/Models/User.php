@@ -21,6 +21,8 @@ use Laravel\Sanctum\HasApiTokens;
     'is_active',
     'password',
     'last_login_at',
+    'invitation_token',
+    'invitation_expires_at',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable

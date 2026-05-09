@@ -46,7 +46,8 @@ class TicketController extends Controller
     public function board(): JsonResponse
     {
         $tickets = Ticket::query()
-            ->with(['assignee:id,name'])
+            ->with(['assignee:id,name', 'reporter:id,name'])
+            ->select(['id', 'title', 'description', 'priority', 'status', 'ticket_code', 'node_name', 'created_at', 'updated_at', 'acknowledged_at', 'resolved_at', 'sla_response_deadline_at', 'sla_resolution_deadline_at', 'assignee_id', 'reporter_id'])
             ->orderByRaw("CASE priority WHEN 'P1' THEN 1 WHEN 'P2' THEN 2 WHEN 'P3' THEN 3 WHEN 'P4' THEN 4 ELSE 5 END")
             ->latest('created_at')
             ->limit(200)

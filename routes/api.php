@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HelpdeskReportController;
 use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\KnowledgeBaseController;
 use App\Http\Controllers\Api\NotificationLogController;
 use App\Http\Controllers\Api\OperationsReportController;
 use App\Http\Controllers\Api\TelegramWebhookController;
@@ -56,9 +57,13 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
     Route::post('/tickets/{ticket}/eos-updates', [TicketEosUpdateController::class, 'store'])
         ->middleware('permission:eos.update.create');
 
-    Route::get('/admin/users', [UserManagementController::class, 'index'])
-        ->middleware('permission:users.manage');
-    Route::post('/admin/users', [UserManagementController::class, 'store'])
+	    Route::get('/admin/users', [UserManagementController::class, 'index'])
+	        ->middleware('permission:users.manage');
+	    Route::post('/admin/users', [UserManagementController::class, 'store'])
+	        ->middleware('permission:users.manage');
+	    Route::post('/admin/users/invite', [UserManagementController::class, 'invite'])
+	        ->middleware('permission:users.manage');
+    Route::post('/admin/users/{user}/resend-invitation', [UserManagementController::class, 'resendInvitation'])
         ->middleware('permission:users.manage');
     Route::patch('/admin/users/{user}', [UserManagementController::class, 'update'])
         ->middleware('permission:users.manage');
@@ -83,10 +88,30 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
     Route::post('/admin/webhook-sources/{source}/rotate-secret', [WebhookSourceManagementController::class, 'rotateSecret'])
         ->middleware('permission:integrations.manage');
 
+    Route::get('/admin/external-integrations', [IntegrationController::class, 'externalIntegrations'])
+        ->middleware('permission:integrations.manage');
+    Route::put('/admin/external-integrations/{provider}', [IntegrationController::class, 'updateExternalIntegration'])
+        ->middleware('permission:integrations.manage');
+
     Route::get('/helpdesk/reports', [HelpdeskReportController::class, 'index'])
         ->middleware('permission:helpdesk.report.view');
     Route::get('/reports/operations', [OperationsReportController::class, 'summary'])
         ->middleware('permission:reports.view');
     Route::get('/notifications', [NotificationLogController::class, 'index'])
         ->middleware('permission:notifications.view');
+
+    Route::get('/knowledge-base', [KnowledgeBaseController::class, 'index'])
+        ->middleware('permission:knowledge-view');
+    Route::get('/knowledge-base/categories', [KnowledgeBaseController::class, 'categories'])
+        ->middleware('permission:knowledge-view');
+    Route::get('/knowledge-base/search', [KnowledgeBaseController::class, 'search'])
+        ->middleware('permission:knowledge-view');
+    Route::get('/knowledge-base/{article}', [KnowledgeBaseController::class, 'show'])
+        ->middleware('permission:knowledge-view');
+    Route::post('/knowledge-base', [KnowledgeBaseController::class, 'store'])
+        ->middleware('permission:knowledge-create');
+    Route::patch('/knowledge-base/{article}', [KnowledgeBaseController::class, 'update'])
+        ->middleware('permission:knowledge-update');
+    Route::delete('/knowledge-base/{article}', [KnowledgeBaseController::class, 'destroy'])
+        ->middleware('permission:knowledge-delete');
 });

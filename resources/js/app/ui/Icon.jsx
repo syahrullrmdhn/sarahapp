@@ -98,6 +98,14 @@ export default function Icon({ name }) {
                     <path d="M7 12h10v8H7v-8Z" />
                 </svg>
             );
+        case 'knowledge':
+            return (
+                <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5Z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                </svg>
+            );
         case 'nodes':
             return (
                 <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

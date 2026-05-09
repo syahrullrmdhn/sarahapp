@@ -12,6 +12,7 @@ const emptyForm = {
 
 export default function IntegrationPanel({ integrations, canManageIntegrations, setError, onRefresh }) {
     const [adminSources, setAdminSources] = useState([]);
+    const [externalIntegrations, setExternalIntegrations] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [q, setQ] = useState('');
 
@@ -21,7 +22,36 @@ export default function IntegrationPanel({ integrations, canManageIntegrations, 
     const [editing, setEditing] = useState(null);
     const [editForm, setEditForm] = useState({ ...emptyForm });
 
+
     const [secretReveal, setSecretReveal] = useState(null);
+    
+    const [isExtEditOpen, setIsExtEditOpen] = useState(false);
+    const [extEditing, setExtEditing] = useState(null);
+    const [extForm, setExtForm] = useState({ provider: '', base_url: '', api_token: '', is_active: false });
+
+    const openExtEdit = (providerName, existingData) => {
+        setExtEditing(providerName);
+        setExtForm({
+            provider: providerName,
+            base_url: existingData?.base_url || '',
+            api_token: '', // never show token
+            is_active: !!existingData?.is_active,
+        });
+        setIsExtEditOpen(true);
+    };
+
+    const saveExtIntegration = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/admin/external-integrations/${extEditing}`, extForm);
+            setIsExtEditOpen(false);
+            setExtEditing(null);
+            await loadAdminSources();
+        } catch (err) {
+            setError?.(err?.response?.data?.message || 'Failed to save integration');
+        }
+    };
+
 
     const filteredAdmin = useMemo(() => {
         const query = q.trim().toLowerCase();
@@ -39,6 +69,9 @@ export default function IntegrationPanel({ integrations, canManageIntegrations, 
         try {
             const res = await api.get('/admin/webhook-sources', { params: { per_page: 100 } });
             setAdminSources(res.data.data || []);
+            
+            const extRes = await api.get('/admin/external-integrations');
+            setExternalIntegrations(extRes.data.data || []);
         } catch (e) {
             setError?.(e?.response?.data?.message || 'Failed to load webhook sources');
         } finally {
@@ -195,7 +228,43 @@ export default function IntegrationPanel({ integrations, canManageIntegrations, 
                 </div>
             </section>
 
+
+            <div className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">External Data Sources (Active Polling)</h3>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Configure credentials for SARAH to actively fetch data (e.g. Zabbix alerts, Grafana anomalies).</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {['zabbix', 'obs', 'grafana'].map(provider => {
+                        const data = externalIntegrations.find(e => e.provider === provider);
+                        return (
+                            <div key={provider} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 flex flex-col">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="font-semibold text-slate-900 dark:text-slate-100 uppercase tracking-wider">{provider}</div>
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${data?.is_active ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                        {data?.is_active ? 'Active' : 'Disabled'}
+                                    </span>
+                                </div>
+                                <div className="mt-auto pt-4 space-y-2">
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">URL: {data?.base_url || 'Not configured'}</div>
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">Token: {data?.has_token ? '••••••••' : 'Not configured'}</div>
+                                    <button 
+                                        onClick={() => openExtEdit(provider, data)}
+                                        className="mt-3 w-full rounded-lg bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                                    >
+                                        Configure
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+            
             {canManageIntegrations ? (
+
                 <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-4 dark:border-slate-800">
                         <div>
@@ -344,6 +413,31 @@ export default function IntegrationPanel({ integrations, canManageIntegrations, 
                         <div className="mt-2 font-mono break-all text-sm text-slate-900 dark:text-slate-100">{secretReveal?.secret || '-'}</div>
                     </div>
                 </div>
+            </Modal>
+
+            <Modal
+                title={`Configure ${extEditing}`}
+                isOpen={isExtEditOpen}
+                onClose={() => setIsExtEditOpen(false)}
+                footer={(
+                    <>
+                        <button className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200 transition-colors dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700" type="button" onClick={() => setIsExtEditOpen(false)}>Cancel</button>
+                        <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg py-2.5 px-4 transition-colors shadow-[0_10px_20px_-10px_rgba(37,99,235,0.55)]" type="submit" form="ext-integration-form">Save config</button>
+                    </>
+                )}
+            >
+                <form id="ext-integration-form" className="grid gap-4 md:grid-cols-2" onSubmit={saveExtIntegration}>
+                    <Field label="Base URL (e.g. https://zabbix.example.com/api_jsonrpc.php)" required className="md:col-span-2">
+                        <input className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all" required value={extForm.base_url} onChange={(e) => setExtForm((p) => ({ ...p, base_url: e.target.value }))} />
+                    </Field>
+                    <Field label="API Token (leave blank to keep existing)" className="md:col-span-2">
+                        <input type="password" placeholder="••••••••" className="h-[44px] w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all" value={extForm.api_token} onChange={(e) => setExtForm((p) => ({ ...p, api_token: e.target.value }))} />
+                    </Field>
+                    <label className="md:col-span-2 inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <input type="checkbox" checked={extForm.is_active} onChange={(e) => setExtForm((p) => ({ ...p, is_active: e.target.checked }))} />
+                        Active (Enable active polling)
+                    </label>
+                </form>
             </Modal>
         </div>
     );

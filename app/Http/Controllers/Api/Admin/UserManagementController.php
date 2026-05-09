@@ -11,6 +11,9 @@ use App\Services\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use App\Mail\UserInvitation;
 
 class UserManagementController extends Controller
 {
@@ -46,7 +49,10 @@ class UserManagementController extends Controller
             'is_active' => (bool) ($validated['is_active'] ?? true),
         ]);
 
-        $roleIds = Role::query()->whereIn('slug', $validated['roles'] ?? [])->pluck('id')->all();
+        $roleIds = Role::query()
+            ->whereIn('slug', $validated['roles'] ?? [])
+            ->pluck('id')
+            ->all();
         $user->roles()->sync($roleIds);
 
         $this->auditLogger->log($user, 'created', [], [
@@ -58,6 +64,58 @@ class UserManagementController extends Controller
         ]);
 
         return response()->json($user->load('roles:id,name,slug'), 201);
+    }
+
+    public function invite(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'timezone' => 'nullable|string',
+            'telegram_chat_id' => 'nullable|string',
+            'is_active' => 'boolean',
+            'roles' => 'array',
+            'roles.*' => 'string',
+        ]);
+
+        $invitationToken = Str::random(64);
+
+        $user = User::query()->create([
+            'name' => $validated['name'],
+            'email' => strtolower($validated['email']),
+            'password' => Hash::make(Str::random(32)), // Temporary password
+            'timezone' => $validated['timezone'] ?? 'Asia/Jakarta',
+            'telegram_chat_id' => $validated['telegram_chat_id'] ?? null,
+            'is_active' => (bool) ($validated['is_active'] ?? true),
+            'invitation_token' => $invitationToken,
+            'invitation_expires_at' => now()->addHours(48),
+        ]);
+
+        $roleIds = Role::query()->whereIn('slug', $validated['roles'] ?? [])->pluck('id')->all();
+        $user->roles()->sync($roleIds);
+
+        Mail::to($user->email)->send(new UserInvitation($user, $invitationToken));
+
+        $this->auditLogger->log($user, 'invited', [], [
+            'name' => $user->name,
+            'email' => $user->email,
+            'timezone' => $user->timezone,
+            'is_active' => $user->is_active,
+            'roles' => $validated['roles'] ?? [],
+        ]);
+
+        return response()->json($user->load('roles:id,name,slug'), 201);
+    }
+
+    public function resendInvitation(Request $request, User $user): JsonResponse
+    {
+        if (!$user->invitation_token || $user->invitation_expires_at->isPast()) {
+            return response()->json(['message' => 'Invalid or expired invitation'], 422);
+        }
+
+        Mail::to($user->email)->send(new UserInvitation($user, $user->invitation_token));
+
+        return response()->json(['message' => 'Invitation resent successfully']);
     }
 
     public function update(UserUpdateRequest $request, User $user): JsonResponse
@@ -97,7 +155,6 @@ class UserManagementController extends Controller
         $new = $fresh->only(['name', 'email', 'timezone', 'telegram_chat_id', 'is_active']);
         $new['roles'] = $fresh->roles->pluck('slug')->all();
 
-        // Never log raw password updates.
         $this->auditLogger->log($fresh, 'updated', $old, $new);
 
         return response()->json($fresh);
